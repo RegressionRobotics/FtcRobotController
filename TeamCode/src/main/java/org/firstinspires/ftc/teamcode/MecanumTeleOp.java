@@ -41,10 +41,10 @@ public class MecanumTeleOp extends LinearOpMode {
             // This ensures all the powers maintain the same ratio,
             // but only if at least one is out of the range [-1, 1]
             double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
-            double frontLeftPower = (y + x + rx) / denominator;
-            double backLeftPower = (y - x + rx) / denominator;
-            double frontRightPower = (y - x - rx) / denominator;
-            double backRightPower = (y + x - rx) / denominator;
+            double frontLeftPower = (y - x + rx) / denominator;
+            double backLeftPower = (y + x + rx) / denominator;
+            double frontRightPower = (y + x - rx) / denominator;
+            double backRightPower = (y - x - rx) / denominator;
             rightHorzSlide.setPower(ex);
             leftHorzSlide.setPower(-ex);
             rightHorzSlide.setPower(-rt);
