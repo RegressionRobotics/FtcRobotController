@@ -109,8 +109,12 @@ public class MecanumTeleOp extends LinearOpMode {
                 rightHorzSlide.setTargetPosition(horzext);
                 rightHorzSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 rightHorzSlide.setPower(1.0);
+                intake.setPower(1);
+                transfer.setPosition(0);
             }
             if (!currentGamepad1.a && previousGamepad1.a) { //turn off intake, flip up transfer, retract slides
+                intake.setPower(0);
+                transfer.setPosition(1);
                 leftHorzSlide.setTargetPosition(horzret);
                 leftHorzSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 leftHorzSlide.setPower(1.0);
