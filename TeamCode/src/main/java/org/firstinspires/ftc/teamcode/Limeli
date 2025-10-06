@@ -1,0 +1,133 @@
+package org.firstinspires.ftc.teamcode;
+// Use your team's package name
+
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.IMU;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import com.qualcomm.robotcore.hardware.IMU.RevHubOrientationOnRobot;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.Pose3D;
+
+@TeleOp(name = "Limelight MegaTag2 Test", group = "Limelight")
+public class AprilTagLimelightTest extends OpMode {
+
+    // 1. Declare Hardware Objects
+    private Limelight3A limelight;
+    private IMU imu;
+
+    // Define the name used in the Control Hub configuration file
+    private static final String LIMELIGHT_NAME = "limelight";
+    private static final int APRILTAG_PIPELINE = 8; // Change this to your AprilTag pipeline number (0-9)
+
+    @Override
+    public void init() {
+
+        // --- Limelight Initialization ---
+        try {
+            // "limelight" must exactly match the name in your Control Hub config.
+            limelight = hardwareMap.get(Limelight3A.class, LIMELIGHT_NAME);
+
+            // Set the target vision pipeline (e.g., AprilTag pipeline)
+            limelight.pipelineSwitch(APRILTAG_PIPELINE);
+
+            // Set the poll rate for fast updates (e.g., 100 Hz or lower)
+            limelight.setPollRateHz(50);
+
+        } catch (Exception e) {
+            telemetry.addData("Error", "Limelight3A not found. Check config name: " + LIMELIGHT_NAME);
+        }
+
+        // --- IMU Initialization ---
+        try {
+            imu = hardwareMap.get(IMU.class, "imu");
+        } catch (Exception e) {
+            telemetry.addData("Error", "IMU not found. Check config name: imu");
+        }
+
+        // Define the Rev Hub's physical orientation on the robot
+        // ADJUST THESE DIRECTIONS (UP/FORWARD) TO MATCH YOUR ROBOT'S BUILD!
+        RevHubOrientationOnRobot robotOrientation = new RevHubOrientationOnRobot(
+                IMU.LogoFacingDirection.UP,
+                IMU.UsbFacingDirection.FORWARD
+        );
+
+        imu.initialize(new IMU.Parameters(robotOrientation));
+
+        telemetry.addData("Status", "Hardware Initialized. Press START.");
+        telemetry.update();
+    }
+
+    @Override
+    public void start() {
+        // Start the limelight feed
+        if (limelight != null) {
+            limelight.start();
+            imu.resetYaw(); // Reset IMU yaw at the start of the match
+        }
+    }
+
+    @Override
+    public void loop() {
+
+        if (limelight == null || imu == null) {
+            telemetry.addData("Status", "FATAL: Limelight or IMU not initialized.");
+            telemetry.update();
+            return;
+        }
+
+        // 1. Get IMU Yaw/Orientation
+        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+
+        // 2. Update Limelight for MegaTag 2
+        // MegaTag 2 fuses this IMU yaw data with vision for better pose accuracy.
+        // The SDK typically expects radians or degrees based on its implementation; using RADIANS is safest.
+        limelight.updateRobotOrientation(orientation.getYaw(AngleUnit.RADIANS));
+
+        // 3. Get Latest Limelight Result
+        LLResult result = limelight.getLatestResult();
+
+        // 4. Process Valid Result
+        // Use result.isValid() instead of checking for null, as per Limelight SDK docs
+        if (result.isValid()) {
+
+            // Get the Bot Pose using MegaTag 2 localization
+            // botpose_MT2 is the preferred method for the Limelight 3A with IMU
+            Pose3D botPose = result.getBotpose_MT2();
+
+            // --- Basic Target Data ---
+            telemetry.addData("Target Found", true);
+            telemetry.addData("Target X (Degrees)", result.getTx()); // Horizontal offset
+            telemetry.addData("Target Y (Degrees)", result.getTy()); // Vertical offset
+            telemetry.addData("Target Area (%)", result.getTa());   // Target size
+
+            // --- MegaTag 2 Localization Data ---
+            if (botPose != null) {
+                // Positional data (X, Y) is usually in inches or meters depending on your LL setup
+                telemetry.addData("Robot Pos X", botPose.getPosition().x);
+                telemetry.addData("Robot Pos Y", botPose.getPosition().y);
+
+                // Rotational data relative to the field
+                telemetry.addData("Robot Yaw (Field)", botPose.getRotation().getZ());
+            } else {
+                telemetry.addData("Localization", "MegaTag 2 Pose is NULL");
+            }
+        } else {
+            telemetry.addData("Status", "No valid AprilTag target found.");
+            // Display raw IMU data for diagnostic if no target is found
+            telemetry.addData("IMU Yaw", orientation.getYaw(AngleUnit.DEGREES));
+        }
+
+        telemetry.update();
+    }
+
+    @Override
+    public void stop() {
+        // Stop the limelight stream to free up resources
+        if (limelight != null) {
+            limelight.stop();
+        }
+    }
+}
