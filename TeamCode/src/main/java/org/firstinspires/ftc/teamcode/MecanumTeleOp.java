@@ -6,7 +6,6 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Gamepad;
-import com.qualcomm.robotcore.hardware.Servo;
 
 @TeleOp(name = "MecanumTeleOp")
 
@@ -15,9 +14,6 @@ public class MecanumTeleOp extends LinearOpMode {
     @Override
 
     public void runOpMode() {
-        //limits for horz ext
-        int horzext = 600;
-        int horzret = 0;
         // Declare our motors
         // Make sure your ID's match your configuration
         //motor declarations
@@ -25,32 +21,22 @@ public class MecanumTeleOp extends LinearOpMode {
         DcMotor backLeftMotor = hardwareMap.dcMotor.get("backLeft");
         DcMotor frontRightMotor = hardwareMap.dcMotor.get("frontRight");
         DcMotor backRightMotor = hardwareMap.dcMotor.get("backRight");
-        DcMotor leftVertSlide = hardwareMap.dcMotor.get("leftVert");
-        DcMotor rightVertSlide = hardwareMap.dcMotor.get("rightVert");
-        DcMotor rightHorzSlide = hardwareMap.dcMotor.get("rightHorz");
-        DcMotor leftHorzSlide = hardwareMap.dcMotor.get("leftHorz");
+        DcMotor shooter = hardwareMap.dcMotor.get("shooter");
+        DcMotor intake = hardwareMap.dcMotor.get("intake");
         //Reverse everything on the left side
         frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        leftVertSlide.setDirection(DcMotorSimple.Direction.REVERSE);
-        leftHorzSlide.setDirection(DcMotorSimple.Direction.REVERSE);
         //init ll3a
 
         //servos
-        Servo transfer = hardwareMap.servo.get("transfer");
-        CRServo intake = hardwareMap.crservo.get("intake");
+        CRServo leftTransfer = hardwareMap.crservo.get("leftTransfer");
+        CRServo rightTransfer = hardwareMap.crservo.get("rightTransfer");
         //controller stuff
         Gamepad currentGamepad1 = new Gamepad();
         Gamepad currentGamepad2 = new Gamepad();
         Gamepad previousGamepad1 = new Gamepad();
         Gamepad previousGamepad2 = new Gamepad();
-        //encoder stuff for horzes
-        leftHorzSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightHorzSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        leftHorzSlide.setTargetPosition(horzret);
-        rightHorzSlide.setTargetPosition(horzret);
-        leftHorzSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightHorzSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
 
 
         waitForStart();
@@ -77,8 +63,6 @@ public class MecanumTeleOp extends LinearOpMode {
             double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
             double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
             double rx = gamepad1.right_stick_x;
-            double rt = -gamepad1.left_trigger;
-            double ex = gamepad1.right_trigger;
 
             // Denominator is the largest motor power (absolute value) or 1
             // This ensures all the powers maintain the same ratio,
@@ -94,40 +78,33 @@ public class MecanumTeleOp extends LinearOpMode {
             frontRightMotor.setPower(frontRightPower);
             backRightMotor.setPower(backRightPower);
 
-            //vert slide code stuff v
-            rightVertSlide.setPower(ex);
-            leftVertSlide.setPower(ex);
-            rightVertSlide.setPower(rt);
-            leftVertSlide.setPower(rt);
-
             //intake things v
             if (currentGamepad1.a && !previousGamepad1.a) { //extend slides, flip down transfer, turn on intake
                 gamepad1.rumble(Gamepad.RUMBLE_DURATION_CONTINUOUS);
-                leftHorzSlide.setTargetPosition(horzext);
-                leftHorzSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                leftHorzSlide.setPower(1.0);
-                rightHorzSlide.setTargetPosition(horzext);
-                rightHorzSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                rightHorzSlide.setPower(1.0);
-                intake.setPower(1);
-                transfer.setPosition(0);
+                intake.setPower(1.0);
             }
             if (!currentGamepad1.a && previousGamepad1.a) { //turn off intake, flip up transfer, retract slides
                 intake.setPower(0);
-                transfer.setPosition(1);
-                leftHorzSlide.setTargetPosition(horzret);
-                leftHorzSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                leftHorzSlide.setPower(1.0);
-                rightHorzSlide.setTargetPosition(horzret);
-                rightHorzSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                rightHorzSlide.setPower(1.0);
                 gamepad1.stopRumble();
             }
-            int left_position = leftHorzSlide.getCurrentPosition();
-            telemetry.addData("Left Position", left_position);
-            int right_position = rightHorzSlide.getCurrentPosition();
-            telemetry.addData("Right Position", right_position);
-            telemetry.update();
+            if (currentGamepad1.b && !previousGamepad1.b) { //extend slides, flip down transfer, turn on intake
+                gamepad1.rumble(Gamepad.RUMBLE_DURATION_CONTINUOUS);
+                shooter.setPower(1.0);
+            }
+            if (!currentGamepad1.b && previousGamepad1.b) { //turn off intake, flip up transfer, retract slides
+                shooter.setPower(0);
+                gamepad1.stopRumble();
+            }
+            if (currentGamepad1.x && !previousGamepad1.x) { //extend slides, flip down transfer, turn on intake
+            gamepad1.rumble(Gamepad.RUMBLE_DURATION_CONTINUOUS);
+            leftTransfer.setPower(1.0);
+            rightTransfer.setPower(1.0);
+            }
+            if (!currentGamepad1.x && previousGamepad1.x) { //turn off intake, flip up transfer, retract slides
+            leftTransfer.setPower(0);
+            rightTransfer.setPower(0);
+            gamepad1.stopRumble();
+        }
 
         }
     }
