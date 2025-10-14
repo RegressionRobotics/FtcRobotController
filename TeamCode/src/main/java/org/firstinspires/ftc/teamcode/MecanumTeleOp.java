@@ -23,6 +23,7 @@ public class MecanumTeleOp extends LinearOpMode {
         DcMotor backRightMotor = hardwareMap.dcMotor.get("backRight");
         DcMotor shooter = hardwareMap.dcMotor.get("shooter");
         DcMotor intake = hardwareMap.dcMotor.get("intake");
+        shooter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         //Reverse everything on the left side
         frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -73,10 +74,13 @@ public class MecanumTeleOp extends LinearOpMode {
             double backLeftPower = (y - x + rx) / denominator;
             double frontRightPower = (y - x - rx) / denominator;
             double backRightPower = (y + x - rx) / denominator;
+            double transfer = gamepad1.right_trigger;
             frontLeftMotor.setPower(frontLeftPower);
             backLeftMotor.setPower(backLeftPower);
             frontRightMotor.setPower(frontRightPower);
             backRightMotor.setPower(backRightPower);
+            rightTransfer.setPower(transfer);
+            leftTransfer.setPower(transfer);
 
             //intake things v
             if (currentGamepad1.a && !previousGamepad1.a) { //extend slides, flip down transfer, turn on intake
@@ -87,24 +91,14 @@ public class MecanumTeleOp extends LinearOpMode {
                 intake.setPower(0);
                 gamepad1.stopRumble();
             }
-            if (currentGamepad1.b && !previousGamepad1.b) { //extend slides, flip down transfer, turn on intake
+            if (currentGamepad1.right_bumper && !previousGamepad1.right_bumper) { //extend slides, flip down transfer, turn on intake
                 gamepad1.rumble(Gamepad.RUMBLE_DURATION_CONTINUOUS);
-                shooter.setPower(0.8);
+                shooter.setPower(0.85);
             }
-            if (!currentGamepad1.b && previousGamepad1.b) { //turn off intake, flip up transfer, retract slides
+            if (!currentGamepad1.right_bumper && previousGamepad1.right_bumper) { //turn off intake, flip up transfer, retract slides
                 shooter.setPower(0);
                 gamepad1.stopRumble();
             }
-            if (currentGamepad1.x && !previousGamepad1.x) { //extend slides, flip down transfer, turn on intake
-            gamepad1.rumble(Gamepad.RUMBLE_DURATION_CONTINUOUS);
-            leftTransfer.setPower(1.0);
-            rightTransfer.setPower(1.0);
-            }
-            if (!currentGamepad1.x && previousGamepad1.x) { //turn off intake, flip up transfer, retract slides
-            leftTransfer.setPower(0);
-            rightTransfer.setPower(0);
-            gamepad1.stopRumble();
-        }
 
         }
     }
