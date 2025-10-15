@@ -1,14 +1,10 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.pedropathing.follower.Follower;
-import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-
-import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import java.util.List;
 
@@ -76,20 +72,17 @@ import java.util.List;
  * - Pipeline 5 is specified in this code (see APRILTAG_PIPELINE constant)
  */
 
-@TeleOp(name = "Limelight Detection", group = "TeleOp")
+@TeleOp(name = "Limelight Detection", group = "Autonomous")
 public class LimelightDetect extends OpMode {
 
     // Hardware objects
     private Limelight3A limelight;
-    private Follower follower;
 
     // We are using Pipeline 5 for AprilTag detection
     private static final int APRILTAG_PIPELINE = 5;
 
-    // CHANGE THIS: Scale value from curve fitting (for distance calculation)
-    // Default: 30665.95 works for 200mm AprilTags
-    // To calibrate: measure at 50cm, 100cm, 150cm, 200cm and use mycurvefit.com
-    private static final double DISTANCE_SCALE = 30665.95;
+    // Distance scale calibrated for your setup
+    private static final double DISTANCE_SCALE = 341;
 
     @Override
     public void init() {
@@ -98,10 +91,6 @@ public class LimelightDetect extends OpMode {
 
         // Switch to AprilTag pipeline (set this in web interface first!)
         limelight.pipelineSwitch(APRILTAG_PIPELINE);
-
-        // Initialize Pedro Pathing for odometry
-        follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(new Pose(0, 0, 0));
 
         // Tell driver we're ready
         telemetry.addData("Status", "Initialized!");
@@ -117,12 +106,6 @@ public class LimelightDetect extends OpMode {
 
     @Override
     public void loop() {
-        // Update Pedro Pathing odometry
-        follower.update();
-
-        // Get Pedro odometry position
-        Pose robotPose = follower.getPose();
-
         // Get latest Limelight result
         LLResult result = limelight.getLatestResult();
 
@@ -168,34 +151,15 @@ public class LimelightDetect extends OpMode {
 
                 // Calculated distance
                 telemetry.addData("Distance to Tag", "%.2f cm", distance);
-                telemetry.addData("", "");
-
-                // Pedro Pathing odometry position
-                telemetry.addData("===== ROBOT ODOMETRY =====", "");
-                telemetry.addData("Robot X", "%.2f inches", robotPose.getX());
-                telemetry.addData("Robot Y", "%.2f inches", robotPose.getY());
-                telemetry.addData("Robot Heading", "%.2f degrees", Math.toDegrees(robotPose.getHeading()));
 
             } else {
                 // No AprilTags found
                 telemetry.addData("Status", "No AprilTags in view");
-                telemetry.addData("", "");
-
-                // Still show odometry
-                telemetry.addData("Robot X", "%.2f inches", robotPose.getX());
-                telemetry.addData("Robot Y", "%.2f inches", robotPose.getY());
-                telemetry.addData("Robot Heading", "%.2f degrees", Math.toDegrees(robotPose.getHeading()));
             }
 
         } else {
             // No valid result from Limelight
             telemetry.addData("Status", "Waiting for Limelight...");
-            telemetry.addData("", "");
-
-            // Still show odometry
-            telemetry.addData("Robot X", "%.2f inches", robotPose.getX());
-            telemetry.addData("Robot Y", "%.2f inches", robotPose.getY());
-            telemetry.addData("Robot Heading", "%.2f degrees", Math.toDegrees(robotPose.getHeading()));
         }
 
         // Update telemetry
