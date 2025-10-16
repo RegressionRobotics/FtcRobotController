@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Gamepad;
@@ -32,6 +33,7 @@ public class MecanumTeleOp extends LinearOpMode {
         //servos
         CRServo leftTransfer = hardwareMap.crservo.get("leftTransfer");
         CRServo rightTransfer = hardwareMap.crservo.get("rightTransfer");
+        Servo arjav = hardwareMap.servo.get("arjav");
         //controller stuff
         Gamepad currentGamepad1 = new Gamepad();
         Gamepad currentGamepad2 = new Gamepad();
@@ -75,6 +77,7 @@ public class MecanumTeleOp extends LinearOpMode {
             double frontRightPower = (y - x - rx) / denominator;
             double backRightPower = (y + x - rx) / denominator;
             double transfer = gamepad1.right_trigger;
+
             frontLeftMotor.setPower(frontLeftPower);
             backLeftMotor.setPower(backLeftPower);
             frontRightMotor.setPower(frontRightPower);
@@ -93,13 +96,23 @@ public class MecanumTeleOp extends LinearOpMode {
             }
             if (currentGamepad1.right_bumper && !previousGamepad1.right_bumper) { //extend slides, flip down transfer, turn on intake
                 gamepad1.rumble(Gamepad.RUMBLE_DURATION_CONTINUOUS);
-                shooter.setPower(0.85);
+                shooter.setPower(0.90   );
             }
             if (!currentGamepad1.right_bumper && previousGamepad1.right_bumper) { //turn off intake, flip up transfer, retract slides
                 shooter.setPower(0);
                 gamepad1.stopRumble();
             }
-
+            if (currentGamepad1.left_bumper) {
+            rightTransfer.setPower(1.0);
+            leftTransfer.setPower(1.0);
+            arjav.setPosition(1);
+            gamepad1.rumble(Gamepad.RUMBLE_DURATION_CONTINUOUS);
+            } else {
+            rightTransfer.setPower(0);
+            leftTransfer.setPower(0);
+            arjav.setPosition(0.5);
+            gamepad1.stopRumble();
+            }
         }
     }
 }
