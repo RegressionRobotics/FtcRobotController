@@ -28,7 +28,7 @@ public class SpikeMarkBlue extends LinearOpMode {
     private Servo arjav;
 
     private static final int APRILTAG_PIPELINE = 5;
-    private static final int DEBUG_DELAY_MS = 250;
+    private static final int DEBUG_DELAY_MS = 200;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -93,7 +93,7 @@ public class SpikeMarkBlue extends LinearOpMode {
     // --- Blue Alliance specific sequences ---
 
     private void executeBlueTag21() throws InterruptedException {
-        moveBackwardNoIntake(39);
+        moveBackwardNoIntake(37);
         sleep(DEBUG_DELAY_MS);
 
         pivotTurnClockwise90();
@@ -108,10 +108,10 @@ public class SpikeMarkBlue extends LinearOpMode {
         moveForwardHeadingRelative(26);
         sleep(DEBUG_DELAY_MS);
 
-        moveForwardHeadingRelative(3);
+        moveForwardHeadingRelative(4);
         sleep(DEBUG_DELAY_MS);
 
-        moveBackwardNoIntake(29);
+        moveBackwardNoIntake(30);
         sleep(DEBUG_DELAY_MS);
 
         resetPedroPose();
@@ -155,7 +155,7 @@ public class SpikeMarkBlue extends LinearOpMode {
     }
 
     private void executeBlueTag22() throws InterruptedException {
-        moveBackwardNoIntake(63);
+        moveBackwardNoIntake(61);
         sleep(DEBUG_DELAY_MS);
 
         pivotTurnClockwise90();
@@ -170,10 +170,10 @@ public class SpikeMarkBlue extends LinearOpMode {
         moveForwardHeadingRelative(26);
         sleep(DEBUG_DELAY_MS);
 
-        moveForwardHeadingRelative(3);
+        moveForwardHeadingRelative(4);
         sleep(DEBUG_DELAY_MS);
 
-        moveBackwardNoIntake(29);
+        moveBackwardNoIntake(30);
         sleep(DEBUG_DELAY_MS);
 
         resetPedroPose();
@@ -224,7 +224,7 @@ public class SpikeMarkBlue extends LinearOpMode {
     }
 
     private void executeBlueTag23() throws InterruptedException {
-        moveBackwardNoIntake(89);
+        moveBackwardNoIntake(87);
         sleep(DEBUG_DELAY_MS);
 
         pivotTurnClockwise90();
@@ -239,10 +239,10 @@ public class SpikeMarkBlue extends LinearOpMode {
         moveForwardHeadingRelative(26);
         sleep(DEBUG_DELAY_MS);
 
-        moveForwardHeadingRelative(3);
+        moveForwardHeadingRelative(4);
         sleep(DEBUG_DELAY_MS);
 
-        moveBackwardNoIntake(29);
+        moveBackwardNoIntake(30);
         sleep(DEBUG_DELAY_MS);
 
         resetPedroPose();
@@ -452,36 +452,54 @@ public class SpikeMarkBlue extends LinearOpMode {
 
         // --- INITIALIZATION ---
         shooter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        arjav.setPosition(1);
+
 
 
         // --- AUTONOMOUS SEQUENCE ---
         if (opModeIsActive()) {
 
-            // Step 1: Power up the shooter motor
+            // === Step 0: Activate Arjav servo ===
+            telemetry.addData("Status", "Step 0: Setting Arjav servo to position 1");
+            telemetry.update();
+            arjav.setPosition(1.0);
+            sleep(250); // small delay for servo to move
 
+            // === Step 1: Power up the shooter motor ===
             telemetry.addData("Status", "Step 1: Spinning up shooter...");
             telemetry.update();
-            shooter.setPower(0.8);
+            shooter.setPower(0.85);
 
-            // Step 2: Wait 2 seconds for the motor to get to speed
-            sleep(2000);
+            // Wait 4 seconds for shooter to reach speed
+            sleep(1000);
 
-            // Step 3: Turn on the transfer servos to feed
-            telemetry.addData("Status", "Step 2: Feeding into shooter...");
+            // === Step 2: Feed first ball with transfer servos ===
+            telemetry.addData("Status", "Step 2: Feeding first ball...");
             telemetry.update();
             leftTransfer.setPower(1.0);
             rightTransfer.setPower(1.0);
+            sleep(100);
 
-            // Step 4: Wait 5 seconds while everything is running
-            sleep(5000);
+            // === Step 3: Run intake briefly to load second ball ===
+            telemetry.addData("Status", "Step 3: Loading second ball...");
+            telemetry.update();
+            intake.setPower(0.85);
+            sleep(250);
 
-            // Step 5: Stop all motors and servos
-            telemetry.addData("Status", "Step 3: Stopping all hardware.");
+
+            // Keep shooter + transfers running for a while
+            telemetry.addData("Status", "Step 4: Running shooter...");
+            telemetry.update();
+
+            sleep(8000);
+
+            // === Step 5: Stop everything ===
+            telemetry.addData("Status", "Step 5: Stopping all hardware.");
             telemetry.update();
             shooter.setPower(0);
             leftTransfer.setPower(0);
             rightTransfer.setPower(0);
+
+
 
         }
     }

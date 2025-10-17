@@ -96,7 +96,7 @@ public class MecanumTeleOp extends LinearOpMode {
             }
             if (currentGamepad1.right_bumper && !previousGamepad1.right_bumper) { //extend slides, flip down transfer, turn on intake
                 gamepad1.rumble(Gamepad.RUMBLE_DURATION_CONTINUOUS);
-                shooter.setPower(0.90   );
+                shooter.setPower(0.8);
             }
             if (!currentGamepad1.right_bumper && previousGamepad1.right_bumper) { //turn off intake, flip up transfer, retract slides
                 shooter.setPower(0);
