@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
 @TeleOp(name = "ShooterTest")
@@ -12,9 +13,9 @@ public class ShooterTest extends LinearOpMode {
     private static final double TICKS_PER_REV = 28.0;
 
     // PID constants (tune these!)
-    private static final double kP = 0.0008;   // proportional gain
-    private static final double kI = 0.000001; // integral gain
-    private static final double kD = 0.0003;   // derivative gain
+    private static final double kP = 0.5;   // proportional gain
+    private static final double kI = 0.01; // integral gain
+    private static final double kD = 0.7;   // derivative gain
 
     @Override
     public void runOpMode() {
@@ -22,6 +23,7 @@ public class ShooterTest extends LinearOpMode {
         DcMotor shooter = hardwareMap.dcMotor.get("shooter");
         shooter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         shooter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooter.setDirection(DcMotorSimple.Direction.REVERSE);
 
         Gamepad currentGamepad1 = new Gamepad();
         Gamepad previousGamepad1 = new Gamepad();
@@ -74,10 +76,12 @@ public class ShooterTest extends LinearOpMode {
             double error = targetRPM - currentRPM;
             integral += error * deltaTime;
             double derivative = (error - lastError) / deltaTime;
+
+            // Calculate PID output
             double output = (kP * error) + (kI * integral) + (kD * derivative);
 
-            // clamp output between 0 and 1
-            double power = shooterOn ? Math.max(0.0, Math.min(output / 100.0, 1.0)) : 0.0;
+            // Clamp output to 0–1
+            double power = shooterOn ? Math.max(0.0, Math.min(output, 1.0)) : 0.0;
             shooter.setPower(power);
 
             lastError = error;
