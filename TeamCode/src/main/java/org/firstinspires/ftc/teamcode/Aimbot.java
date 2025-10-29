@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import java.util.List;
 
@@ -48,6 +49,7 @@ public class Aimbot extends LinearOpMode {
         intake = hardwareMap.dcMotor.get("intake");
         leftTransfer = hardwareMap.crservo.get("leftTransfer");
         rightTransfer = hardwareMap.crservo.get("rightTransfer");
+        Servo arjav = hardwareMap.servo.get("arjav");
 
         // Reverse left side
         frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);

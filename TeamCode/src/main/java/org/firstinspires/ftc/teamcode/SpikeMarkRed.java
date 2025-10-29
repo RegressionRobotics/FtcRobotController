@@ -28,7 +28,7 @@ public class SpikeMarkRed extends LinearOpMode {
     private Servo arjav;
 
     private static final int APRILTAG_PIPELINE = 5;
-    private static final int DEBUG_DELAY_MS = 250;
+    private static final int DEBUG_DELAY_MS = 100;
 
     @Override
     public void runOpMode() throws InterruptedException {

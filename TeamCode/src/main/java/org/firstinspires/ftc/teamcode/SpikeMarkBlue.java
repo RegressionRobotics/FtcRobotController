@@ -12,8 +12,10 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import com.qualcomm.robotcore.hardware.Servo;
+
+import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+
 import java.util.List;
 
 @Autonomous(name = "Spike Marks - Blue Alliance", group = "Autonomous")
@@ -28,7 +30,7 @@ public class SpikeMarkBlue extends LinearOpMode {
     private Servo arjav;
 
     private static final int APRILTAG_PIPELINE = 5;
-    private static final int DEBUG_DELAY_MS = 200;
+    private static final int DEBUG_DELAY_MS = 100;
 
     @Override
     public void runOpMode() throws InterruptedException {
