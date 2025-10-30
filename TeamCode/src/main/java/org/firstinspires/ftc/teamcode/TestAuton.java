@@ -20,7 +20,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import java.util.List;
 
-@Autonomous(name = "AprilTag with Limelight3A and PP", group = "Opmode")
+@Autonomous(name = "RedAutonWPedro", group = "Opmode")
 @Configurable
 @SuppressWarnings("FieldCanBeLocal")
 public class TestAuton extends LinearOpMode {
@@ -82,7 +82,6 @@ public class TestAuton extends LinearOpMode {
             // === Step 0: Activate Arjav servo ===
             log("Status", "Step 0: Setting Arjav servo to position 1");
             arjav.setPosition(1.0);
-            sleep(250); // Small delay for servo to move
 
             // === Step 1: Power up the shooter motor ===
             log("Status", "Step 1: Spinning up shooter...");
@@ -93,16 +92,18 @@ public class TestAuton extends LinearOpMode {
             log("Status", "Step 2: Feeding first ball...");
             leftTransfer.setPower(1.0);
             rightTransfer.setPower(1.0);
-            sleep(100);
+            sleep(500);
 
             // === Step 3: Run intake briefly to load second ball ===
             log("Status", "Step 3: Loading second ball...");
+            intake.setPower(-0.25);
+            sleep(50);
             intake.setPower(0.85);
             sleep(250);
 
             // === Step 4: Keep shooter + transfers running for a while ===
             log("Status", "Step 4: Running shooter...");
-            sleep(5000);
+            sleep(3000);
 
             // === Step 5: Stop everything ===
             log("Status", "Step 5: Stopping all hardware.");
@@ -213,17 +214,23 @@ public class TestAuton extends LinearOpMode {
         pathState = 0; // Reset state machine
     }
 
-    private PathChain alignPPG, scoopPPG, shootPPG, leavePPG;
-    private PathChain alignPGP, scoopPGP, shootPGP, leavePGP;
-    private PathChain alignGPP, scoopGPP, shootGPP, leaveGPP;
+    private PathChain alignPPG, shoot2PPG, scoopPPG, shoot1PPG, leavePPG;
+    private PathChain alignPGP, shoot2PGP, scoopPGP, shoot1PGP, leavePGP;
+    private PathChain alignGPP, shoot2GPP, scoopGPP, shoot1GPP, leaveGPP;
 
     public void buildPathsPPG() {
         if (!pathsBuiltPPG) {
-            // Path 1: Align (start to first pickup)
+            // Path 1: Align (start to shoot)
+            Pose scoring1 = new Pose(84, 84, Math.toRadians(45));
             Pose pickup1 = new Pose(108, 84, Math.toRadians(0));
             alignPPG = follower.pathBuilder()
-                    .addPath(new BezierLine(startPose, pickup1))
-                    .setLinearHeadingInterpolation(startPose.getHeading(), pickup1.getHeading())
+                    .addPath(new BezierLine(startPose, scoring1))
+                    .setLinearHeadingInterpolation(startPose.getHeading(), scoring1.getHeading())
+                    .build();
+            //Path 1.5: shoot to pickup align
+            shoot2PPG = follower.pathBuilder()
+                    .addPath(new BezierLine(scoring1, pickup1))
+                    .setLinearHeadingInterpolation(scoring1.getHeading(), pickup1.getHeading())
                     .build();
 
             // Path 2: Scoop (first pickup to second pickup)
@@ -234,8 +241,7 @@ public class TestAuton extends LinearOpMode {
                     .build();
 
             // Path 3: Shoot (second pickup to first scoring)
-            Pose scoring1 = new Pose(84, 84, Math.toRadians(45));
-            shootPPG = follower.pathBuilder()
+            shoot1PPG = follower.pathBuilder()
                     .addPath(new BezierLine(pickup2, scoring1))
                     .setLinearHeadingInterpolation(pickup2.getHeading(), scoring1.getHeading())
                     .build();
@@ -253,23 +259,28 @@ public class TestAuton extends LinearOpMode {
 
     public void buildPathsPGP() {
         if (!pathsBuiltPGP) {
-            // Path 1: Align (start to first pickup, no y adjustment)
-            Pose pickup1 = new Pose(108, 84, Math.toRadians(0));
+            // Path 1: Align (start to first shoot, no y adjustment)
+            Pose pickup1 = new Pose(108, 60, Math.toRadians(0));
+            Pose scoring1 = new Pose(84, 84, Math.toRadians(45));
             alignPGP = follower.pathBuilder()
-                    .addPath(new BezierLine(startPose, pickup1))
-                    .setLinearHeadingInterpolation(startPose.getHeading(), pickup1.getHeading())
+                    .addPath(new BezierLine(startPose, scoring1))
+                    .setLinearHeadingInterpolation(startPose.getHeading(), scoring1.getHeading())
                     .build();
-
+            //Path 1.5: shoot to pickup align
+            shoot2PGP = follower.pathBuilder()
+                    .addPath(new BezierLine(scoring1, pickup1))
+                    .setLinearHeadingInterpolation(scoring1.getHeading(), pickup1.getHeading())
+                    .build();
             // Path 2: Scoop (first pickup to second pickup, Y lowered by 24)
-            Pose pickup2 = new Pose(120, 84 - 24, Math.toRadians(0));
+            Pose pickup2 = new Pose(120, 60, Math.toRadians(0));
             scoopPGP = follower.pathBuilder()
                     .addPath(new BezierLine(pickup1, pickup2))
                     .setConstantHeadingInterpolation(pickup1.getHeading())
                     .build();
 
             // Path 3: Shoot (second pickup to first scoring, Y lowered by 24)
-            Pose scoring1 = new Pose(84, 84 - 24, Math.toRadians(45));
-            shootPGP = follower.pathBuilder()
+
+            shoot1PGP = follower.pathBuilder()
                     .addPath(new BezierLine(pickup2, scoring1))
                     .setLinearHeadingInterpolation(pickup2.getHeading(), scoring1.getHeading())
                     .build();
@@ -288,22 +299,27 @@ public class TestAuton extends LinearOpMode {
     public void buildPathsGPP() {
         if (!pathsBuiltGPP) {
             // Path 1: Align (start to first pickup, no y adjustment)
-            Pose pickup1 = new Pose(108, 84, Math.toRadians(0));
+            Pose pickup1 = new Pose(108, 36, Math.toRadians(0));
+            Pose scoring1 = new Pose(84, 84, Math.toRadians(45));
             alignGPP = follower.pathBuilder()
-                    .addPath(new BezierLine(startPose, pickup1))
-                    .setLinearHeadingInterpolation(startPose.getHeading(), pickup1.getHeading())
+                    .addPath(new BezierLine(startPose, scoring1))
+                    .setLinearHeadingInterpolation(startPose.getHeading(), scoring1.getHeading())
                     .build();
-
+            //Path 1.5: shoot to pickup align
+            shoot2GPP = follower.pathBuilder()
+                    .addPath(new BezierLine(scoring1, pickup1))
+                    .setLinearHeadingInterpolation(scoring1.getHeading(), pickup1.getHeading())
+                    .build();
             // Path 2: Scoop (first pickup to second pickup, Y lowered by 48)
-            Pose pickup2 = new Pose(120, 84 - 48, Math.toRadians(0));
+            Pose pickup2 = new Pose(120, 36, Math.toRadians(0));
             scoopGPP = follower.pathBuilder()
                     .addPath(new BezierLine(pickup1, pickup2))
                     .setConstantHeadingInterpolation(pickup1.getHeading())
                     .build();
 
             // Path 3: Shoot (second pickup to first scoring, Y lowered by 48)
-            Pose scoring1 = new Pose(84, 84 - 48, Math.toRadians(45));
-            shootGPP = follower.pathBuilder()
+
+            shoot1GPP = follower.pathBuilder()
                     .addPath(new BezierLine(pickup2, scoring1))
                     .setLinearHeadingInterpolation(pickup2.getHeading(), scoring1.getHeading())
                     .build();
@@ -327,6 +343,12 @@ public class TestAuton extends LinearOpMode {
                     case PGP_TAG_ID: follower.followPath(alignPGP); break;
                     case GPP_TAG_ID: follower.followPath(alignGPP); break;
                 }
+                shootArtifacts();
+                switch (foundID) {
+                    case PPG_TAG_ID: follower.followPath(shoot2PPG); break;
+                    case PGP_TAG_ID: follower.followPath(shoot2PGP); break;
+                    case GPP_TAG_ID: follower.followPath(shoot2GPP); break;
+                }
                 pathState = 1;
                 break;
             case 1:
@@ -338,10 +360,11 @@ public class TestAuton extends LinearOpMode {
                     }
                     intakeArtifacts();
                     switch (foundID) {
-                        case PPG_TAG_ID: follower.followPath(shootPPG); break;
-                        case PGP_TAG_ID: follower.followPath(shootPGP); break;
-                        case GPP_TAG_ID: follower.followPath(shootGPP); break;
+                        case PPG_TAG_ID: follower.followPath(shoot1PPG); break;
+                        case PGP_TAG_ID: follower.followPath(shoot1PGP); break;
+                        case GPP_TAG_ID: follower.followPath(shoot1GPP); break;
                     }
+                    shootArtifacts();
                     pathState = 2;
                 }
                 break;
@@ -352,7 +375,6 @@ public class TestAuton extends LinearOpMode {
                         case PGP_TAG_ID: follower.followPath(leavePGP); break;
                         case GPP_TAG_ID: follower.followPath(leaveGPP); break;
                     }
-                    shootArtifacts();
                     pathState = -1; // Stop or reset for next tag
                 }
                 break;
