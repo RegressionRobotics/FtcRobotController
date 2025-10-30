@@ -32,7 +32,7 @@ public class MecanumTeleopWithAimbot extends LinearOpMode {
     private static final long TURN_LEFT_MS = 1400;
     private static final int SCAN_INTERVAL_MS = 40;
     private static final long RUN_AFTER_TAG_MS = 5000; // Run shooter/servos/intake for 7s after tag detection
-    private static final double SHOOTER_POWER = 0.8;
+    private static final double SHOOTER_POWER = 1;
 
     @Override
     public void runOpMode() {
@@ -156,12 +156,14 @@ public class MecanumTeleopWithAimbot extends LinearOpMode {
                     leftTransfer.setPower(1.0);
                     rightTransfer.setPower(1.0);
                     intake.setPower(0.9);
+                    arjav.setPosition(1);
                     long startTime = System.currentTimeMillis();
                     while (opModeIsActive() && System.currentTimeMillis() - startTime < RUN_AFTER_TAG_MS) {
                         sleep(50);
                     }
                     // Stop servos and intake after 7s
                     leftTransfer.setPower(0);
+                    arjav.setPosition(0.5);
                     rightTransfer.setPower(0);
                     intake.setPower(0);
                 }

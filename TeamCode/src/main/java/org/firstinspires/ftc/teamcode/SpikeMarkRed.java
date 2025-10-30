@@ -55,7 +55,7 @@ public class SpikeMarkRed extends LinearOpMode {
         limelight.start();
 
         follower = Constants.createFollower(hardwareMap);
-        follower.setMaxPower(0.6);
+        follower.setMaxPower(0.75);
         follower.setStartingPose(new Pose(0, 0, 0));
 
         telemetry.addLine("Initialized — Waiting for AprilTag...");
@@ -68,7 +68,7 @@ public class SpikeMarkRed extends LinearOpMode {
         telemetry.addData("Detected Tag", detectedTagId);
         telemetry.update();
 
-        sleep(3000); // debug pause
+        sleep(2000); // debug pause
 
         // --- Main autonomous logic ---
         switch (detectedTagId) {
@@ -126,7 +126,7 @@ public class SpikeMarkRed extends LinearOpMode {
         resetPedroPose();
         sleep(DEBUG_DELAY_MS);
 
-        pivotTurnClockwise45();
+        pivotTurnClockwise55();
         sleep(DEBUG_DELAY_MS);
 
         resetPedroPose();
@@ -182,7 +182,7 @@ public class SpikeMarkRed extends LinearOpMode {
         resetPedroPose();
         sleep(DEBUG_DELAY_MS);
 
-        pivotTurnClockwise45();
+        pivotTurnClockwise55();
         sleep(DEBUG_DELAY_MS);
 
         resetPedroPose();
@@ -241,7 +241,7 @@ public class SpikeMarkRed extends LinearOpMode {
         resetPedroPose();
         sleep(DEBUG_DELAY_MS);
 
-        pivotTurnClockwise45();
+        pivotTurnClockwise55();
         sleep(DEBUG_DELAY_MS);
 
         resetPedroPose();
@@ -386,9 +386,9 @@ public class SpikeMarkRed extends LinearOpMode {
         stopAllDriveMotors();
     }
 
-    private void pivotTurnClockwise45() throws InterruptedException {
+    private void pivotTurnClockwise55() throws InterruptedException {
         double power = 0.4;
-        long duration = 245;
+        long duration = 265;
         frontLeftMotor.setPower(power);
         backLeftMotor.setPower(power);
         frontRightMotor.setPower(-power);
@@ -455,7 +455,7 @@ public class SpikeMarkRed extends LinearOpMode {
             telemetry.addData("Status", "Step 4: Running shooter...");
             telemetry.update();
 
-            sleep(8000);
+            sleep(5000);
 
             // === Step 5: Stop everything ===
             telemetry.addData("Status", "Step 5: Stopping all hardware.");
