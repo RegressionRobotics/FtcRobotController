@@ -72,112 +72,128 @@ import java.util.List;
  * - Pipeline 5 is specified in this code (see APRILTAG_PIPELINE constant)
  */
 
-@TeleOp(name = "Limelight Detection", group = "Autonomous")
+@TeleOp(name = "Limelight Detection - FIXED FOR 70 INCHES", group = "Autonomous")
 public class LimelightDetect extends OpMode {
 
     // Hardware objects
     private Limelight3A limelight;
 
     // We are using Pipeline 5 for AprilTag detection
-    private static final int APRILTAG_PIPELINE = 5;
+    private static final int APRILTAG_PIPELINE = 4;
 
-    // Distance scale calibrated for your setup
-    private static final double DISTANCE_SCALE = 341;
+    // === CORRECTED DISTANCE CALIBRATION ===
+    // ta is in PERCENT (0-100), NO *100 NEEDED!
+    // Formula: distance_inches = DISTANCE_SCALE_SQRT_IN / sqrt(ta)
+    // Calibrated assuming ta ≈ 0.92% at 70 inches (from your original readings)
+    // 70 * sqrt(0.92) ≈ 67
+    private static final double DISTANCE_SCALE_SQRT_IN = 67.0;  // <-- TUNE IF NEEDED
 
     @Override
     public void init() {
         // Initialize Limelight
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
 
-        // Switch to AprilTag pipeline (set this in web interface first!)
+        // Switch to AprilTag pipeline (must be pre-configured in web UI!)
         limelight.pipelineSwitch(APRILTAG_PIPELINE);
 
         // Tell driver we're ready
         telemetry.addData("Status", "Initialized!");
         telemetry.addData("AprilTag Pipeline", APRILTAG_PIPELINE);
+        telemetry.addData("Distance Formula", "SCALE_IN / sqrt(ta %)");
+        telemetry.addData("Scale (inches)", DISTANCE_SCALE_SQRT_IN);
+        telemetry.addData("CALIBRATE: At known dist, set SCALE = dist_in * sqrt(ta)", "");
         telemetry.update();
     }
 
     @Override
     public void start() {
-        // Start Limelight when we press START (saves battery)
+        // Start Limelight streaming when OpMode starts
         limelight.start();
     }
 
     @Override
     public void loop() {
-        // Get latest Limelight result
+        // Get latest result from Limelight
         LLResult result = limelight.getLatestResult();
 
-        // Check if we got valid AprilTag data
         if (result != null && result.isValid()) {
 
-            // Get list of detected AprilTags
             List<LLResultTypes.FiducialResult> fiducials = result.getFiducialResults();
 
-            // Check if any AprilTags are detected
             if (fiducials != null && !fiducials.isEmpty()) {
 
-                // Get the first AprilTag
+                // Use the first detected tag
                 LLResultTypes.FiducialResult tag = fiducials.get(0);
 
-                // Get AprilTag ID
-                double tagId = tag.getFiducialId();
+                // Extract data
+                double tagId       = tag.getFiducialId();
+                double tx          = tag.getTargetXDegrees();   // Horizontal offset
+                double ty          = tag.getTargetYDegrees();   // Vertical offset
+                double targetArea  = result.getTa();            // % of image occupied (0-100)
 
-                // Get target offsets
-                double tx = tag.getTargetXDegrees();  // Horizontal offset
-                double ty = tag.getTargetYDegrees();  // Vertical offset
+                // === CORRECT DISTANCE CALCULATION (IN INCHES) ===
+                double distanceIn = getDistanceFromTagInches(targetArea);
 
-                // Get general target data from result
-                double targetArea = result.getTa();   // How much screen tag fills
+                // Also show cm for reference
+                double distanceCm = distanceIn * 2.54;
 
-                // Calculate distance using target area (inverse square law)
-                double distance = getDistanceFromTag(targetArea);
+                // Calibration helper: Suggested scale based on THIS reading
+                double suggestedScale = 70.0 * Math.sqrt(targetArea);  // Assuming 70in physical
 
-                // ===== DISPLAY EVERYTHING =====
+                // === TELEMETRY OUTPUT ===
                 telemetry.addData("===== APRILTAG DETECTED =====", "");
                 telemetry.addData("", "");
 
-                // AprilTag info
                 telemetry.addData("AprilTag ID", "%.0f", tagId);
                 telemetry.addData("Total Tags Visible", fiducials.size());
                 telemetry.addData("", "");
 
-                // Target offsets
                 telemetry.addData("TX (horizontal)", "%.2f degrees", tx);
-                telemetry.addData("TY (vertical)", "%.2f degrees", ty);
-                telemetry.addData("Target Area", "%.2f%%", targetArea);
+                telemetry.addData("TY (vertical)",   "%.2f degrees", ty);
+                telemetry.addData("Target Area",     "%.3f%%", targetArea);  // Show 3 decimals
                 telemetry.addData("", "");
 
-                // Calculated distance
-                telemetry.addData("Distance to Tag", "%.2f cm", distance);
+                telemetry.addData("Distance to Tag", "%.1f inches", distanceIn);
+                telemetry.addData("Distance to Tag", "%.1f cm", distanceCm);
+                telemetry.addData("", "");
+
+                telemetry.addData("CALIB HELP (for 70in):", "SCALE = 70 * sqrt(%.3f) = %.1f", targetArea, suggestedScale);
+                telemetry.addData("Current Scale Used", "%.1f", DISTANCE_SCALE_SQRT_IN);
 
             } else {
-                // No AprilTags found
                 telemetry.addData("Status", "No AprilTags in view");
             }
 
         } else {
-            // No valid result from Limelight
-            telemetry.addData("Status", "Waiting for Limelight...");
+            telemetry.addData("Status", "Waiting for Limelight data...");
         }
 
-        // Update telemetry
         telemetry.update();
     }
 
     /**
-     * Calculate distance from AprilTag using target area
-     * Uses inverse square law: as you move 2x farther, tag appears 4x smaller
-     * Formula: distance = scale / targetArea
+     * Calculate distance using inverse square root of target area.
+     *
+     * ta is already in PERCENT (0–100) from Limelight.
+     *
+     * Physical principle:
+     *   - Tag has fixed size (6 inches / 15.24 cm)
+     *   - As distance doubles, area becomes 1/4
+     *   - So linear size scales with 1/sqrt(area)
+     *
+     * @param targetArea percentage of image filled by tag (0–100)
+     * @return distance in inches
      */
-    public double getDistanceFromTag(double targetArea) {
-        return DISTANCE_SCALE / targetArea;
+    public double getDistanceFromTagInches(double targetArea) {
+        if (targetArea < 0.01) return 0;  // Avoid division by zero / tiny values
+        return DISTANCE_SCALE_SQRT_IN / Math.sqrt(targetArea);
     }
 
     @Override
     public void stop() {
-        // Stop Limelight when OpMode ends
-        limelight.stop();
+        // Stop Limelight to save power
+        if (limelight != null) {
+            limelight.stop();
+        }
     }
 }

@@ -32,7 +32,7 @@ public class MecanumTeleopWithAimbot extends LinearOpMode {
     private static final long TURN_LEFT_MS = 1400;
     private static final int SCAN_INTERVAL_MS = 40;
     private static final long RUN_AFTER_TAG_MS = 5000; // Run shooter/servos/intake for 7s after tag detection
-    private static final double SHOOTER_POWER = 1;
+    private static final double SHOOTER_POWER = 0.75;
 
     @Override
     public void runOpMode() {
