@@ -133,8 +133,6 @@ public class Aimbot extends LinearOpMode {
     private boolean scanWhileTurning(double leftPower, double rightPower, long durationMs) throws InterruptedException {
         long start = System.currentTimeMillis();
         setDrivePowers(leftPower, leftPower, rightPower, rightPower);
-        telemetry.addData("Turning | Power L:%.2f R:%.2f", leftPower, rightPower);
-        telemetry.update();
 
         while (opModeIsActive() && System.currentTimeMillis() - start < durationMs) {
             LLResult result = limelight.getLatestResult();
@@ -203,9 +201,9 @@ public class Aimbot extends LinearOpMode {
 
             LLResult result = limelight.getLatestResult();
             boolean valid = (result != null && result.isValid());
-            telemetry.addData("Loop %d: Result Valid?", valid);
+            telemetry.addData("Loop %d: Result Valid?", valid ? "YES" : "NO");
             if (!valid) {
-                telemetry.addLine("Loop %d: INVALID RESULT - RETRY", centerIterations);
+                telemetry.addLine(String.format("Loop %d: INVALID RESULT - RETRY", centerIterations));
                 sleep(100);
                 continue;
             }
@@ -214,7 +212,7 @@ public class Aimbot extends LinearOpMode {
             int numFid = (fiducials != null) ? fiducials.size() : 0;
             telemetry.addData("Loop %d: Num Fiducials", numFid);
             if (numFid == 0) {
-                telemetry.addLine("Loop %d: NO FIDUCIALS - RETRY", centerIterations);
+                telemetry.addLine(String.format("Loop %d: NO FIDUCIALS - RETRY", centerIterations));
                 sleep(100);
                 continue;
             }
@@ -227,15 +225,15 @@ public class Aimbot extends LinearOpMode {
                 }
             }
             if (tag == null) {
-                telemetry.addLine("Loop %d: TAG 24 NOT FOUND - RETRY", centerIterations);
+                telemetry.addLine(String.format("Loop %d: TAG 24 NOT FOUND - RETRY", centerIterations));
                 sleep(100);
                 continue;
             }
 
             double tx = tag.getTargetXDegrees();
             double ta = result.getTa();
-            telemetry.addData("Loop %d: TX", "%.2f° (tol: %.1f°)", centerIterations, tx, CENTER_TOLERANCE_DEG);
-            telemetry.addData("Loop %d: ta %%", "%.3f", centerIterations, ta);
+            telemetry.addData("Loop %d: TX", String.format("%.2f° (tol: %.1f°)", tx, CENTER_TOLERANCE_DEG));
+            telemetry.addData("Loop %d: ta %%", String.format("%.3f", ta));
             telemetry.update();
 
             if (Math.abs(tx) < CENTER_TOLERANCE_DEG) {
@@ -251,8 +249,8 @@ public class Aimbot extends LinearOpMode {
             turnTimeMs = Math.max(turnTimeMs, 150);  // Min 150ms for visible turn
             turnTimeMs = Math.min(turnTimeMs, 800);  // Max 800ms
 
-            telemetry.addData("Loop %d: Turning", "%s %.1f° for %d ms",
-                    (tx > 0 ? "RIGHT" : "LEFT"), Math.abs(tx), turnTimeMs);
+            telemetry.addData("Loop %d: Turning", String.format("%s %.1f° for %d ms",
+                    (tx > 0 ? "RIGHT" : "LEFT"), Math.abs(tx), turnTimeMs));
             telemetry.update();
 
             if (tx > 0) {
@@ -265,19 +263,19 @@ public class Aimbot extends LinearOpMode {
 
             sleep(turnTimeMs);
             stopAllDriveMotors();
-            telemetry.addLine("Loop %d: Turn complete - stopping motors");
+            telemetry.addLine(String.format("Loop %d: Turn complete - stopping motors", centerIterations));
             telemetry.update();
 
             // Reset Pedro after turn
-            telemetry.addLine("Loop %d: Resetting Pedro after turn...", centerIterations);
+            telemetry.addLine(String.format("Loop %d: Resetting Pedro after turn...", centerIterations));
             resetPedroPose();
-            telemetry.addLine("Loop %d: Pedro reset done", centerIterations);
+            telemetry.addLine(String.format("Loop %d: Pedro reset done", centerIterations));
 
             sleep(100);  // Settle time
         }
 
         telemetry.addData("Center End: Iterations", centerIterations);
-        telemetry.addData("Center End: Time", "%.1fs", (System.currentTimeMillis() - centerStart) / 1000.0);
+        telemetry.addData("Center End: Time", String.format("%.1fs", (System.currentTimeMillis() - centerStart) / 1000.0));
         if (System.currentTimeMillis() - centerStart >= CENTER_TIMEOUT_MS) {
             telemetry.addLine("*** CENTER TIMEOUT - Check Limelight data above ***");
         }
@@ -293,7 +291,7 @@ public class Aimbot extends LinearOpMode {
         sleep(500);  // Extra settle time
         LLResult result = limelight.getLatestResult();
         boolean valid = (result != null && result.isValid());
-        telemetry.addData("Measure: Valid Result?", valid);
+        telemetry.addData("Measure: Valid Result?", valid ? "YES" : "NO");
         if (!valid) {
             telemetry.addLine("Measure: INVALID - Skipping adjust");
             return;
@@ -326,11 +324,11 @@ public class Aimbot extends LinearOpMode {
 
         // Calibration helper
         double suggestedScale = 70.0 * Math.sqrt(targetArea);
-        telemetry.addData("Measure: Final TX", "%.2f°", tx);
-        telemetry.addData("Measure: ta %%", "%.3f", targetArea);
-        telemetry.addData("Measure: Dist", "%.1f in", distanceIn);
-        telemetry.addData("Measure: Delta", "%.1f in (tol: %.1f)", delta, DISTANCE_TOLERANCE_IN);
-        telemetry.addData("Measure: CALIB Suggest SCALE", "%.1f (curr: %.1f)", suggestedScale, DISTANCE_SCALE_SQRT_IN);
+        telemetry.addData("Measure: Final TX", String.format("%.2f°", tx));
+        telemetry.addData("Measure: ta %%", String.format("%.3f", targetArea));
+        telemetry.addData("Measure: Dist", String.format("%.1f in", distanceIn));
+        telemetry.addData("Measure: Delta", String.format("%.1f in (tol: %.1f)", delta, DISTANCE_TOLERANCE_IN));
+        telemetry.addData("Measure: CALIB Suggest SCALE", String.format("%.1f (curr: %.1f)", suggestedScale, DISTANCE_SCALE_SQRT_IN));
         telemetry.update();
 
         if (Math.abs(delta) < DISTANCE_TOLERANCE_IN) {
@@ -384,7 +382,7 @@ public class Aimbot extends LinearOpMode {
         follower.followPath(path);
         while (opModeIsActive() && follower.isBusy()) {
             follower.update();
-            telemetry.addData("Path Progress", "%.1f%%", follower.getProgress() * 100);
+            telemetry.addData("Path Progress", "Following...");
             telemetry.update();
         }
         follower.breakFollowing();
@@ -406,7 +404,7 @@ public class Aimbot extends LinearOpMode {
         follower.followPath(path);
         while (opModeIsActive() && follower.isBusy()) {
             follower.update();
-            telemetry.addData("Path Progress", "%.1f%%", follower.getProgress() * 100);
+            telemetry.addData("Path Progress", "Following...");
             telemetry.update();
         }
         follower.breakFollowing();
