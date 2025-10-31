@@ -224,7 +224,7 @@ public class TestAutonBlue extends OpMode {
             case 3: /* This case waits for robot to reach pickup 1 and scoops the sample */
                 if (!follower.isBusy()) {
                     intake.setPower(1);
-                    follower.setMaxPower(0.3);
+                    follower.setMaxPower(0.25);
                     switch (foundID) {
                         case PPG_TAG_ID: follower.followPath(scoopPPG, true); break;
                         case PGP_TAG_ID: follower.followPath(scoopPGP, true); break;
