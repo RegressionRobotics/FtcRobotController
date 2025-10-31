@@ -11,441 +11,440 @@ import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import java.util.List;
 
 @Autonomous(name = "RedAutonWPedro", group = "Opmode")
 @Configurable
-@SuppressWarnings("FieldCanBeLocal")
-public class TestAuton extends LinearOpMode {
-    // Initialize elapsed timer
-    private final ElapsedTime runtime = new ElapsedTime();
+public class TestAuton extends OpMode {
 
-    // Initialize poses
-    private final Pose startPose = new Pose(81, 8, Math.toRadians(270)); // Updated starting pose
+    // === Timers ===
+    private final ElapsedTime waitTimer = new ElapsedTime();
+    private final Timer pathTimer = new Timer();
+    private final Timer opmodeTimer = new Timer();
 
-    // Initialize variables for paths
-    private int pathState = 0;
+    // === Poses ===
+    private final Pose startPose = new Pose(85, 9, Math.toRadians(270));
 
-    // AprilTag IDs
+    // === AprilTag IDs ===
     private static final int PPG_TAG_ID = 23;
     private static final int PGP_TAG_ID = 22;
     private static final int GPP_TAG_ID = 21;
+    private static final int APRILTAG_PIPELINE = 5;
+    private static final int DETECTION_TIMEOUT = 100;
 
-    // Limelight configuration
-    private static final int APRILTAG_PIPELINE = 5; // From SpikeMarkRed example
-    private static final int DETECTION_TIMEOUT = 100; // Number of loops to wait for detection
-    private Limelight3A limelight;
+    // === Hardware ===
+    private DcMotor  intake;
+    private DcMotor  shooter;
+    private CRServo  leftTransfer;
+    private CRServo  rightTransfer;
+    private Servo    arjav;
 
-    // Hardware
-    private DcMotor intake, shooter;
-    private CRServo leftTransfer, rightTransfer;
-    private Servo arjav;
-
-    // Path building flags
-    private boolean pathsBuiltPPG = false;
-    private boolean pathsBuiltPGP = false;
-    private boolean pathsBuiltGPP = false;
-
-    // Other variables
-    private Pose currentPose;
+    // === Pathing ===
     private Follower follower;
     private TelemetryManager panelsTelemetry;
-    private int foundID;
+    private int pathState = 0;
+    private int foundID   = 0;
 
-    // Custom logging function
+    // === Limelight ===
+    private Limelight3A limelight;
+
+    // === Path Chains ===
+    private PathChain alignPPG, toPickup1PPG, scoopPPG, backToScorePPG, leavePPG;
+    private PathChain alignPGP, toPickup1PGP, scoopPGP, backToScorePGP, leavePGP;
+    private PathChain alignGPP, toPickup1GPP, scoopGPP, backToScoreGPP, leaveGPP;
+
+    // === Shooting ===
+    private boolean isShooting = false;
+    private int     shootStep  = 0;
+    private final ElapsedTime shootTimer = new ElapsedTime();
+
+    // === Intake ===
+    private boolean isIntaking = false;
+    private final ElapsedTime intakeTimer = new ElapsedTime();
+
+    // === Timer Class ===
+    public static class Timer {
+        private final ElapsedTime t = new ElapsedTime();
+        public void resetTimer() { t.reset(); }
+        public double getElapsedTimeSeconds() { return t.seconds(); }
+    }
+
+    // === Logging ===
     private void log(String caption, Object value) {
         telemetry.addData(caption, value);
-        panelsTelemetry.debug(caption + ": " + value);
+        if (panelsTelemetry != null) panelsTelemetry.debug(caption + ": " + value);
     }
 
-    // Intake function (adapted from SpikeMarkRed)
-    public void intakeArtifacts() {
-        intake.setPower(0.85);
-        sleep(250); // Run intake briefly to load artifact
-        intake.setPower(0);
-    }
-
-    // Shooting function (adapted from SpikeMarkRed's startAutoShooterSequence)
-    public void shootArtifacts() {
-        // --- INITIALIZATION ---
-        shooter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        // --- AUTONOMOUS SEQUENCE ---
-        if (opModeIsActive()) {
-            // === Step 0: Activate Arjav servo ===
-            log("Status", "Step 0: Setting Arjav servo to position 1");
-            arjav.setPosition(1.0);
-
-            // === Step 1: Power up the shooter motor ===
-            log("Status", "Step 1: Spinning up shooter...");
-            shooter.setPower(0.75); // Wait 4 seconds for shooter to reach speed
-            sleep(1000);
-
-            // === Step 2: Feed first ball with transfer servos ===
-            log("Status", "Step 2: Feeding first ball...");
-            leftTransfer.setPower(1.0);
-            rightTransfer.setPower(1.0);
-            sleep(500);
-
-            // === Step 3: Run intake briefly to load second ball ===
-            log("Status", "Step 3: Loading second ball...");
-            intake.setPower(0.85);
-            sleep(250);
-
-            // === Step 4: Keep shooter + transfers running for a while ===
-            log("Status", "Step 4: Running shooter...");
-            sleep(3000);
-
-            // === Step 5: Stop everything ===
-            log("Status", "Step 5: Stopping all hardware.");
-            shooter.setPower(0);
-            leftTransfer.setPower(0);
-            rightTransfer.setPower(0);
-            intake.setPower(0);
-            arjav.setPosition(0.5);
-        }
-    }
-
-    @Override
-    public void runOpMode() {
-        // Initialize Panels telemetry
-        panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
-
-        // Initialize hardware
-        intake = hardwareMap.get(DcMotor.class, "intake");
-        shooter = hardwareMap.get(DcMotor.class, "shooter");
-        leftTransfer = hardwareMap.get(CRServo.class, "leftTransfer");
-        rightTransfer = hardwareMap.get(CRServo.class, "rightTransfer");
-        arjav = hardwareMap.get(Servo.class, "arjav");
-
-        // Initialize Pedro Pathing follower
-        follower = Constants.createFollower(hardwareMap);
-        follower.setMaxPower(0.75); // From SpikeMarkRed, reduced for safety
-        follower.setStartingPose(startPose);
-
-        // Initialize Limelight
-        limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        limelight.pipelineSwitch(APRILTAG_PIPELINE);
-        limelight.start();
-
-        // Fallback path building for debugging (remove after testing)
-        buildPathsPPG(); // Default to PPG for testing
-        log("Status", "Paths built for debugging (PPG)");
-
-        log("Status", "Initialized");
-        telemetry.update();
-
-        // Wait for the game to start and allow initial detection
-        waitForStart();
-        runtime.reset();
-        sleep(1000); // Give Limelight time to detect
-        pathState = 0;
-        foundID = 0;
-
-        // Force initial path detection
-        detectAprilTag();
-        if (foundID == 0) {
-            log("Warning", "No tag detected initially, using PPG as fallback");
-            foundID = PPG_TAG_ID; // Fallback to PPG if no tag is detected
-        }
-
-        while (opModeIsActive()) {
-            // Update Pedro Pathing and Panels
+    // === NON-BLOCKING WAIT (no idle, no isStopRequested) ===
+    private void waitFor(double milliseconds) {
+        waitTimer.reset();
+        while (waitTimer.milliseconds() < milliseconds) {
+            // Keep robot alive
             follower.update();
-            panelsTelemetry.update();
-            currentPose = follower.getPose();
-
-            // Check for AprilTag detection
-            detectAprilTag();
-            log("Found ID", foundID); // Debug: Check if foundID is set
-
-            // Update state machine if a tag is found
-            if (foundID != 0) {
-                updateStateMachine();
-            }
-
-            // Log position data with normalized heading
-            double rawHeading = currentPose.getHeading();
-            double normalizedHeading = Math.toDegrees((rawHeading + 2 * Math.PI) % (2 * Math.PI)); // 0 to 360
-            log("Position - X", String.format("%.2f", currentPose.getX()));
-            log("Position - Y", String.format("%.2f", currentPose.getY()));
-            log("Position - Heading (Raw)", String.format("%.2f°", Math.toDegrees(rawHeading))); // Raw value
-            log("Position - Heading (Normalized)", String.format("%.2f°", normalizedHeading)); // 0 to 360
-
-            // Debug heading during path execution
-            if (pathState > 0 && !follower.isBusy()) {
-                log("Debug", "Heading after path " + pathState + ": " + String.format("%.2f°", Math.toDegrees(rawHeading)));
-            }
-
-            telemetry.update();
+            updateShooting();
+            updateIntake();
+            if (panelsTelemetry != null) panelsTelemetry.update();
+            // No idle(), no Thread.yield() — just loop
         }
-
-        // Stop Limelight
-        limelight.stop();
     }
 
+    // === NON-BLOCKING INTAKE ===
+
+    private void updateIntake() {
+        if (!isIntaking) return;
+        if (intakeTimer.milliseconds() >= 1000) {
+            intake.setPower(0);
+            isIntaking = false;
+            log("Intake", "Finished");
+        }
+    }
+
+    // === Shooting: Non-blocking ===
+    private void startShooting() {
+        if (isShooting) return;
+        isShooting = true;
+        shootStep = 0;
+        shootTimer.reset();
+        shooter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        arjav.setPosition(1.0);
+        log("Shooting", "Started");
+    }
+
+    private void updateShooting() {
+        if (!isShooting) return;
+
+        switch (shootStep) {
+            case 0: // Spin up
+                shooter.setPower(0.8);
+                if (shootTimer.milliseconds() > 1000) {
+                    shootStep = 1;
+                    shootTimer.reset();
+                    leftTransfer.setPower(1.0);
+                    rightTransfer.setPower(1.0);
+                    log("Shooting", "Feeding first ball");
+                }
+                break;
+            case 1: // Feed first
+                if (shootTimer.milliseconds() > 500) {
+                    shootStep = 2;
+                    shootTimer.reset();
+                    intake.setPower(1);
+                    log("Shooting", "Loading second ball");
+                }
+                break;
+            case 2: // Wait for intake
+                if (!isIntaking) {
+                    shootStep = 3;
+                    shootTimer.reset();
+                }
+                break;
+            case 3: // Run shooter
+                if (shootTimer.milliseconds() > 3000) {
+                    stopShooting();
+                }
+                break;
+        }
+    }
+
+    private void stopShooting() {
+        shooter.setPower(0);
+        leftTransfer.setPower(0);
+        rightTransfer.setPower(0);
+        intake.setPower(0);
+        arjav.setPosition(0.5);
+        isShooting = false;
+        log("Shooting", "Finished");
+    }
+
+    // === Path State Machine ===
+    private void autonomousPathUpdate() {
+        if (foundID == 0) return;
+
+        switch (pathState) {
+            case 0: /* This case starts the alignment to the scoring position */
+                if (true) {
+                    switch (foundID) {
+                        case PPG_TAG_ID: follower.followPath(alignPPG, true); break;
+                        case PGP_TAG_ID: follower.followPath(alignPGP, true); break;
+                        case GPP_TAG_ID: follower.followPath(alignGPP, true); break;
+                    }
+                    setPathState(1);
+                }
+                break;
+
+            case 1: /* This case waits for return to scoring and starts shooting */
+                if (!follower.isBusy()) {
+                    startShooting();
+                    setPathState(2);
+                }
+                break;
+
+            case 2: /* This case waits for alignment to finish and moves to pickup 1 */
+                if (!isShooting) {
+                    switch (foundID) {
+                        case PPG_TAG_ID: follower.followPath(toPickup1PPG, true); break;
+                        case PGP_TAG_ID: follower.followPath(toPickup1PGP, true); break;
+                        case GPP_TAG_ID: follower.followPath(toPickup1GPP, true); break;
+                    }
+                    setPathState(3);
+                }
+                break;
+
+            case 3: /* This case waits for robot to reach pickup 1 and scoops the sample */
+                if (!follower.isBusy()) {
+                    intake.setPower(1);
+                    follower.setMaxPower(0.3);
+                    switch (foundID) {
+                        case PPG_TAG_ID: follower.followPath(scoopPPG, true); break;
+                        case PGP_TAG_ID: follower.followPath(scoopPGP, true); break;
+                        case GPP_TAG_ID: follower.followPath(scoopGPP, true); break;
+                    }
+                    setPathState(4);
+                }
+                break;
+
+            case 4: /* This case waits for scoop to finish and returns to scoring position */
+
+                if (!follower.isBusy()) {
+                    follower.setMaxPower(0.75);
+                    intake.setPower(0);
+                    switch (foundID) {
+                        case PPG_TAG_ID: follower.followPath(backToScorePPG, true); break;
+                        case PGP_TAG_ID: follower.followPath(backToScorePGP, true); break;
+                        case GPP_TAG_ID: follower.followPath(backToScoreGPP, true); break;
+                    }
+                    setPathState(5);
+                }
+                break;
+
+            case 5: /* This case waits for return to scoring and starts shooting */
+                if (!follower.isBusy()) {
+                    startShooting();
+                    setPathState(6);
+                }
+                break;
+
+            case 6: /* This case waits for shooting to complete */
+                if (!isShooting) {
+                    follower.setMaxPower(1);
+                    switch (foundID) {
+                        case PPG_TAG_ID: follower.followPath(leavePPG, true); break;
+                        case PGP_TAG_ID: follower.followPath(leavePGP, true); break;
+                        case GPP_TAG_ID: follower.followPath(leaveGPP, true); break;
+                    }
+                    setPathState(7);
+                }
+                break;
+
+            case 7: /* This case waits for leave path to finish */
+                if (!follower.isBusy()) {
+                    setPathState(-1);
+                }
+                break;
+        }
+    }
+
+    private void setPathState(int pState) {
+        pathState = pState;
+        pathTimer.resetTimer();
+        log("Path State", pathState);
+    }
+
+    // === Path Building ===
+    private void buildPaths() {
+        Pose scoring1 = new Pose(84, 85, Math.toRadians(228));
+        Pose scoring2 = new Pose(96, 49, Math.toRadians(228));
+
+        // PPG
+        Pose pickup1GPP = new Pose(96, 83, Math.toRadians(0));
+        Pose pickup2GPP = new Pose(120, 83, Math.toRadians(0));
+
+        alignPPG = follower.pathBuilder()
+                .addPath(new BezierLine(startPose, scoring1))
+                .setLinearHeadingInterpolation(startPose.getHeading(), scoring1.getHeading())
+                .build();
+
+        toPickup1PPG = follower.pathBuilder()
+                .addPath(new BezierLine(scoring1, pickup1GPP))
+                .setLinearHeadingInterpolation(scoring1.getHeading(), pickup1GPP.getHeading())
+                .build();
+
+        scoopPPG = follower.pathBuilder()
+                .addPath(new BezierLine(pickup1GPP, pickup2GPP))
+                .setConstantHeadingInterpolation(pickup1GPP.getHeading())
+                .build();
+
+        backToScorePPG = follower.pathBuilder()
+                .addPath(new BezierLine(pickup2GPP, scoring1))
+                .setLinearHeadingInterpolation(pickup2GPP.getHeading(), scoring1.getHeading())
+                .build();
+
+        leavePPG = follower.pathBuilder()
+                .addPath(new BezierLine(scoring1, scoring2))
+                .setConstantHeadingInterpolation(scoring1.getHeading())
+                .build();
+
+        // PGP
+        Pose pickup1PPG = new Pose(96, 59, Math.toRadians(0));
+        Pose pickup2PPG = new Pose(120, 59, Math.toRadians(0));
+
+        alignPGP = follower.pathBuilder()
+                .addPath(new BezierLine(startPose, scoring1))
+                .setLinearHeadingInterpolation(startPose.getHeading(), scoring1.getHeading())
+                .build();
+
+        toPickup1PGP = follower.pathBuilder()
+                .addPath(new BezierLine(scoring1, pickup1PPG))
+                .setLinearHeadingInterpolation(scoring1.getHeading(), pickup1PPG.getHeading())
+                .build();
+
+        scoopPGP = follower.pathBuilder()
+                .addPath(new BezierLine(pickup1PPG, pickup2PPG))
+                .setConstantHeadingInterpolation(pickup1PPG.getHeading())
+                .build();
+
+        backToScorePGP = follower.pathBuilder()
+                .addPath(new BezierLine(pickup2PPG, scoring1))
+                .setLinearHeadingInterpolation(pickup2PPG.getHeading(), scoring1.getHeading())
+                .build();
+
+        leavePGP = follower.pathBuilder()
+                .addPath(new BezierLine(scoring1, scoring2))
+                .setConstantHeadingInterpolation(scoring1.getHeading())
+                .build();
+
+        // GPP
+        Pose pickup1PGP = new Pose(96, 35, Math.toRadians(0));
+        Pose pickup2PGP = new Pose(120, 35, Math.toRadians(0));
+
+        alignGPP = follower.pathBuilder()
+                .addPath(new BezierLine(startPose, scoring1))
+                .setLinearHeadingInterpolation(startPose.getHeading(), scoring1.getHeading())
+                .build();
+
+        toPickup1GPP = follower.pathBuilder()
+                .addPath(new BezierLine(scoring1, pickup1PGP))
+                .setLinearHeadingInterpolation(scoring1.getHeading(), pickup1PGP.getHeading())
+                .build();
+
+        scoopGPP = follower.pathBuilder()
+                .addPath(new BezierLine(pickup1PGP, pickup2PGP))
+                .setConstantHeadingInterpolation(pickup1PGP.getHeading())
+                .build();
+
+        backToScoreGPP = follower.pathBuilder()
+                .addPath(new BezierLine(pickup2PGP, scoring1))
+                .setLinearHeadingInterpolation(pickup2PGP.getHeading(), scoring1.getHeading())
+                .build();
+
+        leaveGPP = follower.pathBuilder()
+                .addPath(new BezierLine(scoring1, scoring2))
+                .setConstantHeadingInterpolation(scoring1.getHeading())
+                .build();
+    }
+
+    // === AprilTag Detection (runs in start()) ===
     private void detectAprilTag() {
         int timeout = 0;
-        while (opModeIsActive() && timeout < DETECTION_TIMEOUT && foundID == 0) {
+        while (timeout < DETECTION_TIMEOUT && foundID == 0) {
             LLResult result = limelight.getLatestResult();
             if (result != null && result.isValid()) {
                 List<LLResultTypes.FiducialResult> fiducials = result.getFiducialResults();
                 if (fiducials != null && !fiducials.isEmpty()) {
                     int tagID = fiducials.get(0).getFiducialId();
-                    if (tagID == PPG_TAG_ID) {
-                        setCurrentPath(PPG_TAG_ID);
-                        foundID = PPG_TAG_ID;
-                    } else if (tagID == PGP_TAG_ID) {
-                        setCurrentPath(PGP_TAG_ID);
-                        foundID = PGP_TAG_ID;
-                    } else if (tagID == GPP_TAG_ID) {
-                        setCurrentPath(GPP_TAG_ID);
-                        foundID = GPP_TAG_ID;
-                    } else {
-                        log("Limelight", "Unknown tag ID: " + tagID);
+                    if (tagID == PPG_TAG_ID || tagID == PGP_TAG_ID || tagID == GPP_TAG_ID) {
+                        foundID = tagID;
+                        log("Detected Tag", tagID);
+                        return;
                     }
-                    log("Detected Tag", tagID); // Debug: Confirm detection
-                    return; // Exit loop once a tag is detected
                 }
             }
-            sleep(50);
+            waitFor(50);
             timeout++;
         }
-        log("Limelight", "No target detected after timeout");
+        foundID = PPG_TAG_ID;
+        log("Warning", "No tag detected – using PPG");
     }
 
-    public void setCurrentPath(int tagID) {
-        log("Setting path for ID", tagID); // Debug: Confirm path setting
-        switch (tagID) {
-            case PPG_TAG_ID:
-                buildPathsPPG();
-                break;
-            case PGP_TAG_ID:
-                buildPathsPGP();
-                break;
-            case GPP_TAG_ID:
-                buildPathsGPP();
-                break;
-        }
-        pathState = 0; // Reset state machine
+    // ==============================================================
+    //  OpMode Lifecycle – ONLY THESE 5 METHODS
+    // ==============================================================
+
+    @Override
+    public void init() {
+        panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
+
+        intake        = hardwareMap.get(DcMotor.class,  "intake");
+        shooter       = hardwareMap.get(DcMotor.class,  "shooter");
+        leftTransfer  = hardwareMap.get(CRServo.class, "leftTransfer");
+        rightTransfer = hardwareMap.get(CRServo.class, "rightTransfer");
+        arjav         = hardwareMap.get(Servo.class,    "arjav");
+
+        follower = Constants.createFollower(hardwareMap);
+        follower.setMaxPower(0.75);
+        follower.setStartingPose(startPose);
+
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        limelight.pipelineSwitch(APRILTAG_PIPELINE);
+        limelight.start();
+
+        opmodeTimer.resetTimer();
+
+        buildPaths();
+
+        log("Status", "INIT: Ready");
+        telemetry.update();
     }
 
-    private PathChain alignPPG, shoot2PPG, scoopPPG, shoot1PPG, leavePPG;
-    private PathChain alignPGP, shoot2PGP, scoopPGP, shoot1PGP, leavePGP;
-    private PathChain alignGPP, shoot2GPP, scoopGPP, shoot1GPP, leaveGPP;
-
-    public void buildPathsPPG() {
-        if (!pathsBuiltPPG) {
-            log("Building paths for PPG", "Starting...");
-            // Path 1: Align (start to scoring position)
-            Pose scoring1 = new Pose(84, 84, Math.toRadians(225));
-            alignPPG = follower.pathBuilder()
-                    .addPath(new BezierLine(startPose, scoring1))
-                    .setLinearHeadingInterpolation(startPose.getHeading(), scoring1.getHeading())
-                    .build();
-
-            // Path 1.5: Move to pickup align (scoring to pickup)
-            Pose pickup1 = new Pose(108, 84, Math.toRadians(0));
-            shoot2PPG = follower.pathBuilder()
-                    .addPath(new BezierLine(scoring1, pickup1))
-                    .setLinearHeadingInterpolation(scoring1.getHeading(), pickup1.getHeading())
-                    .build();
-
-            // Path 2: Scoop (pickup to second pickup)
-            Pose pickup2 = new Pose(120, 84, Math.toRadians(0));
-            scoopPPG = follower.pathBuilder()
-                    .addPath(new BezierLine(pickup1, pickup2))
-                    .setConstantHeadingInterpolation(pickup1.getHeading())
-                    .build();
-
-            // Path 3: Shoot (second pickup back to scoring)
-            shoot1PPG = follower.pathBuilder()
-                    .addPath(new BezierLine(pickup2, scoring1))
-                    .setLinearHeadingInterpolation(pickup2.getHeading(), scoring1.getHeading())
-                    .build();
-
-            // Path 4: Leave (scoring to final pose)
-            Pose scoring2 = new Pose(96, 48, Math.toRadians(225));
-            leavePPG = follower.pathBuilder()
-                    .addPath(new BezierLine(scoring1, scoring2))
-                    .setConstantHeadingInterpolation(scoring1.getHeading())
-                    .build();
-
-            pathsBuiltPPG = true;
-            log("Building paths for PPG", "Completed");
-        }
+    @Override
+    public void init_loop() {
+        log("Status", "INIT_LOOP: Press START");
+        telemetry.update();
     }
 
-    public void buildPathsPGP() {
-        if (!pathsBuiltPGP) {
-            log("Building paths for PGP", "Starting...");
-            // Path 1: Align (start to scoring position)
-            Pose scoring1 = new Pose(84, 84, Math.toRadians(225));
-            alignPGP = follower.pathBuilder()
-                    .addPath(new BezierLine(startPose, scoring1))
-                    .setLinearHeadingInterpolation(startPose.getHeading(), scoring1.getHeading())
-                    .build();
-
-            // Path 1.5: Move to pickup align (scoring to pickup)
-            Pose pickup1 = new Pose(108, 84, Math.toRadians(0));
-            shoot2PGP = follower.pathBuilder()
-                    .addPath(new BezierLine(scoring1, pickup1))
-                    .setLinearHeadingInterpolation(scoring1.getHeading(), pickup1.getHeading())
-                    .build();
-
-            // Path 2: Scoop (pickup to second pickup, Y lowered by 24)
-            Pose pickup2 = new Pose(120, 84 - 24, Math.toRadians(0));
-            scoopPGP = follower.pathBuilder()
-                    .addPath(new BezierLine(pickup1, pickup2))
-                    .setConstantHeadingInterpolation(pickup1.getHeading())
-                    .build();
-
-            // Path 3: Shoot (second pickup back to scoring, Y lowered by 24)
-            shoot1PGP = follower.pathBuilder()
-                    .addPath(new BezierLine(pickup2, scoring1))
-                    .setLinearHeadingInterpolation(pickup2.getHeading(), scoring1.getHeading())
-                    .build();
-
-            // Path 4: Leave (scoring to final pose, no y adjustment)
-            Pose scoring2 = new Pose(96, 48, Math.toRadians(225));
-            leavePGP = follower.pathBuilder()
-                    .addPath(new BezierLine(scoring1, scoring2))
-                    .setConstantHeadingInterpolation(scoring1.getHeading())
-                    .build();
-
-            pathsBuiltPGP = true;
-            log("Building paths for PGP", "Completed");
-        }
+    @Override
+    public void start() {
+        opmodeTimer.resetTimer();
+        waitFor(1000);
+        detectAprilTag();
+        setPathState(0);
+        log("Status", "START: Running");
     }
 
-    public void buildPathsGPP() {
-        if (!pathsBuiltGPP) {
-            log("Building paths for GPP", "Starting...");
-            // Path 1: Align (start to scoring position)
-            Pose scoring1 = new Pose(84, 84, Math.toRadians(225));
-            alignGPP = follower.pathBuilder()
-                    .addPath(new BezierLine(startPose, scoring1))
-                    .setLinearHeadingInterpolation(startPose.getHeading(), scoring1.getHeading())
-                    .build();
+    @Override
+    public void loop() {
+        follower.update();
+        updateShooting();
+        updateIntake();
+        autonomousPathUpdate();
 
-            // Path 1.5: Move to pickup align (scoring to pickup)
-            Pose pickup1 = new Pose(108, 84, Math.toRadians(0));
-            shoot2GPP = follower.pathBuilder()
-                    .addPath(new BezierLine(scoring1, pickup1))
-                    .setLinearHeadingInterpolation(scoring1.getHeading(), pickup1.getHeading())
-                    .build();
+        if (panelsTelemetry != null) panelsTelemetry.update();
 
-            // Path 2: Scoop (pickup to second pickup, Y lowered by 48)
-            Pose pickup2 = new Pose(120, 84 - 48, Math.toRadians(0));
-            scoopGPP = follower.pathBuilder()
-                    .addPath(new BezierLine(pickup1, pickup2))
-                    .setConstantHeadingInterpolation(pickup1.getHeading())
-                    .build();
+        Pose pose = follower.getPose();
+        double normH = Math.toDegrees((pose.getHeading() + 2 * Math.PI) % (2 * Math.PI));
 
-            // Path 3: Shoot (second pickup back to scoring, Y lowered by 48)
-            shoot1GPP = follower.pathBuilder()
-                    .addPath(new BezierLine(pickup2, scoring1))
-                    .setLinearHeadingInterpolation(pickup2.getHeading(), scoring1.getHeading())
-                    .build();
+        log("X",            String.format("%.2f", pose.getX()));
+        log("Y",            String.format("%.2f", pose.getY()));
+        log("Heading",      String.format("%.2f°", normH));
+        log("Path State",   pathState);
+        log("Found ID",     foundID);
+        log("Time (s)",     String.format("%.2f", opmodeTimer.getElapsedTimeSeconds()));
 
-            // Path 4: Leave (scoring to final pose, no y adjustment)
-            Pose scoring2 = new Pose(96, 48, Math.toRadians(225));
-            leaveGPP = follower.pathBuilder()
-                    .addPath(new BezierLine(scoring1, scoring2))
-                    .setConstantHeadingInterpolation(scoring1.getHeading())
-                    .build();
-
-            pathsBuiltGPP = true;
-            log("Building paths for GPP", "Completed");
-        }
+        telemetry.update();
     }
 
-    public void updateStateMachine() {
-        switch (pathState) {
-            case 0:
-                switch (foundID) {
-                    case PPG_TAG_ID:
-                        if (alignPPG != null) follower.followPath(alignPPG);
-                        else log("Error", "alignPPG is null");
-                        break;
-                    case PGP_TAG_ID:
-                        if (alignPGP != null) follower.followPath(alignPGP);
-                        else log("Error", "alignPGP is null");
-                        break;
-                    case GPP_TAG_ID:
-                        if (alignGPP != null) follower.followPath(alignGPP);
-                        else log("Error", "alignGPP is null");
-                        break;
-                }
-                pathState = 1;
-                break;
-            case 1:
-                if (!follower.isBusy()) {
-                    switch (foundID) {
-                        case PPG_TAG_ID:
-                            if (shoot2PPG != null) follower.followPath(shoot2PPG);
-                            else log("Error", "shoot2PPG is null");
-                            if (scoopPPG != null) follower.followPath(scoopPPG);
-                            else log("Error", "scoopPPG is null");
-                            break;
-                        case PGP_TAG_ID:
-                            if (shoot2PGP != null) follower.followPath(shoot2PGP);
-                            else log("Error", "shoot2PGP is null");
-                            if (scoopPGP != null) follower.followPath(scoopPGP);
-                            else log("Error", "scoopPGP is null");
-                            break;
-                        case GPP_TAG_ID:
-                            if (shoot2GPP != null) follower.followPath(shoot2GPP);
-                            else log("Error", "shoot2GPP is null");
-                            if (scoopGPP != null) follower.followPath(scoopGPP);
-                            else log("Error", "scoopGPP is null");
-                            break;
-                    }
-                    intakeArtifacts();
-                    switch (foundID) {
-                        case PPG_TAG_ID:
-                            if (shoot1PPG != null) follower.followPath(shoot1PPG);
-                            else log("Error", "shoot1PPG is null");
-                            break;
-                        case PGP_TAG_ID:
-                            if (shoot1PGP != null) follower.followPath(shoot1PGP);
-                            else log("Error", "shoot1PGP is null");
-                            break;
-                        case GPP_TAG_ID:
-                            if (shoot1GPP != null) follower.followPath(shoot1GPP);
-                            else log("Error", "shoot1GPP is null");
-                            break;
-                    }
-                    shootArtifacts();
-                    pathState = 2;
-                }
-                break;
-            case 2:
-                if (!follower.isBusy()) {
-                    switch (foundID) {
-                        case PPG_TAG_ID:
-                            if (leavePPG != null) follower.followPath(leavePPG);
-                            else log("Error", "leavePPG is null");
-                            break;
-                        case PGP_TAG_ID:
-                            if (leavePGP != null) follower.followPath(leavePGP);
-                            else log("Error", "leavePGP is null");
-                            break;
-                        case GPP_TAG_ID:
-                            if (leaveGPP != null) follower.followPath(leaveGPP);
-                            else log("Error", "leaveGPP is null");
-                            break;
-                    }
-                    pathState = -1; // Stop or reset for next tag
-                }
-                break;
-        }
+    @Override
+    public void stop() {
+        if (limelight != null) limelight.stop();
+        stopShooting();
+        log("Status", "STOP: Done");
     }
 }
