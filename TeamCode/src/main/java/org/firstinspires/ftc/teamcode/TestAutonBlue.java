@@ -119,7 +119,7 @@ public class TestAutonBlue extends OpMode {
         arjav.setPosition(1.0);
 
         // Set shooter power: 0.9 only on the second shoot, otherwise 0.75
-        double shooterPower = (shootCount == 1) ? 0.8 : 0.75;
+        double shooterPower = (shootCount == 1) ? 0.77 : 0.75;
         shooter.setPower(shooterPower);
 
         log("Shooting", "Started (Count: " + shootCount + ", Power: " + shooterPower + ")");
@@ -283,12 +283,12 @@ public class TestAutonBlue extends OpMode {
 
     // === Path Building ===
     private void buildPaths() {
-        Pose scoring1 = new Pose(54, 90, Math.toRadians(318));
-        Pose scoring2 = new Pose(48, 49, Math.toRadians(318));
+        Pose scoring1 = new Pose(54, 90, Math.toRadians(320));
+        Pose scoring2 = new Pose(48, 49, Math.toRadians(320));
 
         // PPG
-        Pose pickup1GPP = new Pose(48, 35, Math.toRadians(0));
-        Pose pickup2GPP = new Pose(24, 35, Math.toRadians(0));
+        Pose pickup1GPP = new Pose(48, 35, Math.toRadians(180));
+        Pose pickup2GPP = new Pose(24, 35, Math.toRadians(180));
 
         alignPPG = follower.pathBuilder()
                 .addPath(new BezierLine(startPose, scoring1))
@@ -316,8 +316,8 @@ public class TestAutonBlue extends OpMode {
                 .build();
 
         // PGP
-        Pose pickup1PPG = new Pose(48, 83, Math.toRadians(0));
-        Pose pickup2PPG = new Pose(24, 83, Math.toRadians(0));
+        Pose pickup1PPG = new Pose(48, 83, Math.toRadians(180));
+        Pose pickup2PPG = new Pose(24, 83, Math.toRadians(180));
 
         alignPGP = follower.pathBuilder()
                 .addPath(new BezierLine(startPose, scoring1))
@@ -345,8 +345,8 @@ public class TestAutonBlue extends OpMode {
                 .build();
 
         // GPP
-        Pose pickup1PGP = new Pose(48, 59, Math.toRadians(0));
-        Pose pickup2PGP = new Pose(24, 59, Math.toRadians(0));
+        Pose pickup1PGP = new Pose(48, 59, Math.toRadians(180));
+        Pose pickup2PGP = new Pose(24, 59, Math.toRadians(180));
 
         alignGPP = follower.pathBuilder()
                 .addPath(new BezierLine(startPose, scoring1))
