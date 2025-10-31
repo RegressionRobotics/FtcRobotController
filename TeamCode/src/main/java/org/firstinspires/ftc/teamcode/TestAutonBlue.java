@@ -21,9 +21,9 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import java.util.List;
 
-@Autonomous(name = "RedAutonWPedro", group = "Opmode")
+@Autonomous(name = "BlueAutonWPedro", group = "Opmode")
 @Configurable
-public class TestAuton extends OpMode {
+public class TestAutonBlue extends OpMode {
 
     // === Timers ===
     private final ElapsedTime waitTimer = new ElapsedTime();
@@ -65,6 +65,7 @@ public class TestAuton extends OpMode {
     // === Shooting ===
     private boolean isShooting = false;
     private int     shootStep  = 0;
+    private int     shootCount = 0;
     private final ElapsedTime shootTimer = new ElapsedTime();
 
     // === Intake ===
@@ -116,15 +117,19 @@ public class TestAuton extends OpMode {
         shootTimer.reset();
         shooter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         arjav.setPosition(1.0);
-        log("Shooting", "Started");
+
+        // Set shooter power: 0.9 only on the second shoot, otherwise 0.75
+        double shooterPower = (shootCount == 1) ? 0.8 : 0.75;
+        shooter.setPower(shooterPower);
+
+        log("Shooting", "Started (Count: " + shootCount + ", Power: " + shooterPower + ")");
     }
 
     private void updateShooting() {
         if (!isShooting) return;
 
         switch (shootStep) {
-            case 0: // Spin up shooter
-                shooter.setPower(0.75);
+            case 0: // Spin up shooter — power already set in startShooting()
                 if (shootTimer.milliseconds() > 1500) {
                     shootStep = 1;
                     shootTimer.reset();
@@ -165,7 +170,7 @@ public class TestAuton extends OpMode {
                 break;
 
             case 3: // Run shooter (original 3-second hold)
-                if (shootTimer.milliseconds() > 3000) {
+                if (shootTimer.milliseconds() > 1800) {
                     stopShooting();
                 }
                 break;
@@ -176,9 +181,10 @@ public class TestAuton extends OpMode {
         leftTransfer.setPower(0);
         rightTransfer.setPower(0);
         intake.setPower(0);
-        arjav.setPosition(0.5);
+        arjav.setPosition(0.6);
         isShooting = false;
-        log("Shooting", "Finished");
+        shootCount++;  // ADD THIS LINE
+        log("Shooting", "Finished (Total Shoots: " + shootCount + ")");
     }
 
     // === Path State Machine ===
@@ -277,7 +283,7 @@ public class TestAuton extends OpMode {
 
     // === Path Building ===
     private void buildPaths() {
-        Pose scoring1 = new Pose(84, 85, Math.toRadians(222));
+        Pose scoring1 = new Pose(90, 90, Math.toRadians(222));
         Pose scoring2 = new Pose(96, 49, Math.toRadians(222));
 
         // PPG
