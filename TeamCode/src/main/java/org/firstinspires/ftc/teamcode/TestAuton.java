@@ -127,7 +127,7 @@ public class TestAuton extends LinearOpMode {
 
         // Initialize Pedro Pathing follower
         follower = Constants.createFollower(hardwareMap);
-        follower.setMaxPower(0.25); // From SpikeMarkRed, reduced for safety
+        follower.setMaxPower(0.75); // From SpikeMarkRed, reduced for safety
         follower.setStartingPose(startPose);
 
         // Initialize Limelight
