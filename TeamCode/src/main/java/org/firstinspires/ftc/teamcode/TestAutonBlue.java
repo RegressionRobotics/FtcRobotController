@@ -32,7 +32,7 @@ public class TestAutonBlue extends OpMode {
     private int intakePulseCount = 0;   // counts completed ON-pulses
 
     // === Poses ===
-    private final Pose startPose = new Pose(85, 9, Math.toRadians(270));
+    private final Pose startPose = new Pose(59, 9, Math.toRadians(270));
 
     // === AprilTag IDs ===
     private static final int PPG_TAG_ID = 23;
@@ -283,12 +283,12 @@ public class TestAutonBlue extends OpMode {
 
     // === Path Building ===
     private void buildPaths() {
-        Pose scoring1 = new Pose(90, 90, Math.toRadians(222));
-        Pose scoring2 = new Pose(96, 49, Math.toRadians(222));
+        Pose scoring1 = new Pose(54, 90, Math.toRadians(318));
+        Pose scoring2 = new Pose(48, 49, Math.toRadians(318));
 
         // PPG
-        Pose pickup1GPP = new Pose(96, 35, Math.toRadians(0));
-        Pose pickup2GPP = new Pose(120, 35, Math.toRadians(0));
+        Pose pickup1GPP = new Pose(48, 35, Math.toRadians(0));
+        Pose pickup2GPP = new Pose(24, 35, Math.toRadians(0));
 
         alignPPG = follower.pathBuilder()
                 .addPath(new BezierLine(startPose, scoring1))
@@ -316,8 +316,8 @@ public class TestAutonBlue extends OpMode {
                 .build();
 
         // PGP
-        Pose pickup1PPG = new Pose(96, 83, Math.toRadians(0));
-        Pose pickup2PPG = new Pose(120, 83, Math.toRadians(0));
+        Pose pickup1PPG = new Pose(48, 83, Math.toRadians(0));
+        Pose pickup2PPG = new Pose(24, 83, Math.toRadians(0));
 
         alignPGP = follower.pathBuilder()
                 .addPath(new BezierLine(startPose, scoring1))
@@ -345,8 +345,8 @@ public class TestAutonBlue extends OpMode {
                 .build();
 
         // GPP
-        Pose pickup1PGP = new Pose(96, 59, Math.toRadians(0));
-        Pose pickup2PGP = new Pose(120, 59, Math.toRadians(0));
+        Pose pickup1PGP = new Pose(48, 59, Math.toRadians(0));
+        Pose pickup2PGP = new Pose(24, 59, Math.toRadians(0));
 
         alignGPP = follower.pathBuilder()
                 .addPath(new BezierLine(startPose, scoring1))
