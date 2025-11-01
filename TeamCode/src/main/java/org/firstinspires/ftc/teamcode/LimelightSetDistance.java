@@ -168,13 +168,10 @@ public class LimelightSetDistance extends LinearOpMode {
 
     private void resetPedroPose() {
         follower.breakFollowing();
-<<<<<<< HEAD
         follower.setStartingPose(new Pose(0, 0, 270));
         telemetry.addLine("Pedro pose reset (0,0,0)");
-=======
         follower.setStartingPose(new Pose(0, 0, Math.toRadians(270)));
         telemetry.addLine("Pedro pose reset (0,0,270°)");
->>>>>>> 3e57fc0c5f4e28eb519b0a5ba78995bb183f1d08
         telemetry.update();
     }
 }

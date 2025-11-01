@@ -14,7 +14,7 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-@TeleOp(name = "2MecanumTeleOp")
+@TeleOp(name = "RedMecanumTeleOp")
 public class Me2 extends OpMode {
 
     // === Hardware ===
@@ -110,8 +110,8 @@ public class Me2 extends OpMode {
         if (!isFollowingPath) {
             // Manual drive mode using Pedro's setTeleOpDrive (robot-centric, with strafe correction)
             double ly = -gamepad1.left_stick_y;
-            double lx = gamepad1.left_stick_x * 1.1;
-            double rx = gamepad1.right_stick_x;
+            double lx = -gamepad1.left_stick_x * 1.1;
+            double rx = -gamepad1.right_stick_x;
             follower.setTeleOpDrive(ly, lx, rx, true);  // true for robot-centric
         }
 
@@ -132,7 +132,7 @@ public class Me2 extends OpMode {
         // Shooter (RB toggle)
         if (currentGamepad1.right_bumper && !previousGamepad1.right_bumper) {
             gamepad1.rumble(100, 100, 100);
-            shooter.setPower(0.8);
+            shooter.setPower(0.75);
         }
         if (!currentGamepad1.right_bumper && previousGamepad1.right_bumper) {
             shooter.setPower(0);
@@ -147,7 +147,7 @@ public class Me2 extends OpMode {
         } else {
             rightTransfer.setPower(0);
             leftTransfer.setPower(0);
-            arjav.setPosition(0.5);
+            arjav.setPosition(0.6);
         }
 
         // Telemetry
