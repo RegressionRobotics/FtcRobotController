@@ -18,22 +18,22 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import java.util.List;
 
-@Autonomous(name = "Limelight Distance Control Y (71in Base)", group = "Autonomous")
+@Autonomous(name = "Limelight Distance Control (Y + 270° Heading)", group = "Autonomous")
 public class LimelightSetDistance extends LinearOpMode {
 
     private DcMotor frontLeftMotor, backLeftMotor, frontRightMotor, backRightMotor;
     private Limelight3A limelight;
     private Follower follower;
 
-    // Config constants
-    private static final int APRILTAG_PIPELINE = 4;
+    // --- Configuration ---
+    private static final int APRILTAG_PIPELINE = 5;
     private static final double TARGET_DISTANCE_IN = 71.0;
     private static final double DISTANCE_TOLERANCE_IN = 1.0;
-    private static final double DISTANCE_SCALE_SQRT_IN = 67.0;  // adjust this based on real readings
+    private static final double DISTANCE_SCALE_SQRT_IN = 67.0; // calibrate for your robot
 
     @Override
     public void runOpMode() throws InterruptedException {
-        telemetry.addLine("Initializing Limelight Distance Control (Y-axis)...");
+        telemetry.addLine("Initializing Limelight Distance Control (Y-axis, 270°)...");
         telemetry.update();
 
         // --- Motor setup ---
@@ -42,8 +42,9 @@ public class LimelightSetDistance extends LinearOpMode {
         frontRightMotor = hardwareMap.dcMotor.get("frontRight");
         backRightMotor = hardwareMap.dcMotor.get("backRight");
 
-        frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        // Keep default directions; we'll handle inversion in code logic below.
+        frontLeftMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        backLeftMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         frontRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         backRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
 
@@ -55,7 +56,8 @@ public class LimelightSetDistance extends LinearOpMode {
         // --- Pedro follower setup ---
         follower = Constants.createFollower(hardwareMap);
         follower.setMaxPower(0.4);
-        follower.setStartingPose(new Pose(0, 0, 0));
+        // Facing 270° (facing -X direction)
+        follower.setStartingPose(new Pose(0, 0, Math.toRadians(270)));
 
         telemetry.addLine("Waiting for Limelight to warm up...");
         telemetry.update();
@@ -101,13 +103,15 @@ public class LimelightSetDistance extends LinearOpMode {
         resetPedroPose();
 
         if (delta > 0) {
-            telemetry.addData("Action", "Moving FORWARD by %.1f in", delta);
+            // Too far → move forward (REVERSED motor logic)
+            telemetry.addData("Action", "Moving FORWARD (motors reverse) by %.1f in", delta);
             telemetry.update();
-            moveForwardY(delta);
+            moveForwardInverted(delta);
         } else {
-            telemetry.addData("Action", "Moving BACKWARD by %.1f in", Math.abs(delta));
+            // Too close → move backward (motors forward)
+            telemetry.addData("Action", "Moving BACKWARD (motors forward) by %.1f in", Math.abs(delta));
             telemetry.update();
-            moveBackwardY(Math.abs(delta));
+            moveBackwardInverted(Math.abs(delta));
         }
 
         telemetry.addLine("Final position reached.");
@@ -116,15 +120,18 @@ public class LimelightSetDistance extends LinearOpMode {
         limelight.stop();
     }
 
-    // Estimate distance in inches using area (simple sqrt inverse model)
+    // Convert Limelight area to approximate distance
     private double getDistanceFromTagInches(double targetArea) {
         if (targetArea <= 0.0) return 999.0;
         return DISTANCE_SCALE_SQRT_IN / Math.sqrt(targetArea);
     }
 
-    private void moveForwardY(double inches) throws InterruptedException {
+    // Move forward (toward tag) – inverted drive logic
+    private void moveForwardInverted(double inches) throws InterruptedException {
         Pose start = follower.getPose();
-        Pose target = new Pose(start.getX(), start.getY() + inches, start.getHeading());
+        // Invert direction: forward = negative Y in this setup
+        Pose target = new Pose(start.getX(), start.getY() - inches, start.getHeading());
+
         PathChain path = follower.pathBuilder()
                 .addPath(new BezierLine(start, target))
                 .setConstantHeadingInterpolation(start.getHeading())
@@ -133,15 +140,18 @@ public class LimelightSetDistance extends LinearOpMode {
         follower.followPath(path);
         while (opModeIsActive() && follower.isBusy()) {
             follower.update();
-            telemetry.addLine("Moving forward on Y-axis...");
+            telemetry.addLine("Moving forward (Y negative, motors reverse)...");
             telemetry.update();
         }
         follower.breakFollowing();
     }
 
-    private void moveBackwardY(double inches) throws InterruptedException {
+    // Move backward (away from tag) – inverted drive logic
+    private void moveBackwardInverted(double inches) throws InterruptedException {
         Pose start = follower.getPose();
-        Pose target = new Pose(start.getX(), start.getY() - inches, start.getHeading());
+        // Invert direction: backward = positive Y in this setup
+        Pose target = new Pose(start.getX(), start.getY() + inches, start.getHeading());
+
         PathChain path = follower.pathBuilder()
                 .addPath(new BezierLine(start, target))
                 .setConstantHeadingInterpolation(start.getHeading())
@@ -150,7 +160,7 @@ public class LimelightSetDistance extends LinearOpMode {
         follower.followPath(path);
         while (opModeIsActive() && follower.isBusy()) {
             follower.update();
-            telemetry.addLine("Moving backward on Y-axis...");
+            telemetry.addLine("Moving backward (Y positive, motors forward)...");
             telemetry.update();
         }
         follower.breakFollowing();
@@ -158,8 +168,13 @@ public class LimelightSetDistance extends LinearOpMode {
 
     private void resetPedroPose() {
         follower.breakFollowing();
+<<<<<<< HEAD
         follower.setStartingPose(new Pose(0, 0, 270));
         telemetry.addLine("Pedro pose reset (0,0,0)");
+=======
+        follower.setStartingPose(new Pose(0, 0, Math.toRadians(270)));
+        telemetry.addLine("Pedro pose reset (0,0,270°)");
+>>>>>>> 3e57fc0c5f4e28eb519b0a5ba78995bb183f1d08
         telemetry.update();
     }
 }
