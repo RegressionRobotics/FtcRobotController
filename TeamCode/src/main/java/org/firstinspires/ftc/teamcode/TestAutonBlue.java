@@ -119,7 +119,7 @@ public class TestAutonBlue extends OpMode {
         arjav.setPosition(1.0);
 
         // Set shooter power: 0.9 only on the second shoot, otherwise 0.75
-        double shooterPower = (shootCount == 1) ? 0.77 : 0.75;
+        double shooterPower = (shootCount == 1) ? 0.75 : 0.73;
         shooter.setPower(shooterPower);
 
         log("Shooting", "Started (Count: " + shootCount + ", Power: " + shooterPower + ")");
