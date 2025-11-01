@@ -9,17 +9,15 @@ import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.Servo;
-
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
-
 import java.util.List;
 
-@Autonomous(name = "Spike Marks - Blue Alliance", group = "Autonomous")
-public class SpikeMarkBlue extends LinearOpMode {
+@Autonomous(name = "Spike Marks - Red Alliance", group = "Autonomous")
+public class OldAutonRed extends LinearOpMode {
 
     private Limelight3A limelight;
     private Follower follower;
@@ -57,7 +55,7 @@ public class SpikeMarkBlue extends LinearOpMode {
         limelight.start();
 
         follower = Constants.createFollower(hardwareMap);
-        follower.setMaxPower(0.6);
+        follower.setMaxPower(0.75);
         follower.setStartingPose(new Pose(0, 0, 0));
 
         telemetry.addLine("Initialized — Waiting for AprilTag...");
@@ -70,21 +68,21 @@ public class SpikeMarkBlue extends LinearOpMode {
         telemetry.addData("Detected Tag", detectedTagId);
         telemetry.update();
 
-        sleep(3000); // debug pause
+        sleep(2000); // debug pause
 
         // --- Main autonomous logic ---
         switch (detectedTagId) {
             case 21:
-                executeBlueTag21();
+                executeRedTag21();
                 break;
             case 22:
-                executeBlueTag22();
+                executeRedTag22();
                 break;
             case 23:
-                executeBlueTag23();
+                executeRedTag23();
                 break;
             default:
-                executeBlueDefault();
+                executeRedDefault();
                 break;
         }
 
@@ -92,16 +90,13 @@ public class SpikeMarkBlue extends LinearOpMode {
         telemetry.update();
     }
 
-    // --- Blue Alliance specific sequences ---
+    // --- Red Alliance specific sequences ---
 
-    private void executeBlueTag21() throws InterruptedException {
+    private void executeRedTag21() throws InterruptedException {
         moveBackwardNoIntake(37);
         sleep(DEBUG_DELAY_MS);
 
-        pivotTurnClockwise90();
-        sleep(DEBUG_DELAY_MS);
-
-        resetPedroPose();
+        pivotTurnAnticlockwise90();
         sleep(DEBUG_DELAY_MS);
 
         resetPedroPose();
@@ -113,19 +108,13 @@ public class SpikeMarkBlue extends LinearOpMode {
         moveForwardHeadingRelative(4);
         sleep(DEBUG_DELAY_MS);
 
-        moveBackwardNoIntake(30);
+        moveBackwardNoIntake(29);
         sleep(DEBUG_DELAY_MS);
 
         resetPedroPose();
         sleep(DEBUG_DELAY_MS);
 
-        resetPedroPose();
-        sleep(DEBUG_DELAY_MS);
-
-        pivotTurnAnticlockwise90();
-        sleep(DEBUG_DELAY_MS);
-
-        resetPedroPose();
+        pivotTurnClockwise90();
         sleep(DEBUG_DELAY_MS);
 
         resetPedroPose();
@@ -137,7 +126,7 @@ public class SpikeMarkBlue extends LinearOpMode {
         resetPedroPose();
         sleep(DEBUG_DELAY_MS);
 
-        pivotTurnAnticlockwise45();
+        pivotTurnClockwise55();
         sleep(DEBUG_DELAY_MS);
 
         resetPedroPose();
@@ -148,7 +137,7 @@ public class SpikeMarkBlue extends LinearOpMode {
         resetPedroPose();
         sleep(DEBUG_DELAY_MS);
 
-        pivotTurnClockwise45();
+        pivotTurnAnticlockwise45();
 
         resetPedroPose();
         sleep(DEBUG_DELAY_MS);
@@ -156,11 +145,11 @@ public class SpikeMarkBlue extends LinearOpMode {
         moveForwardNoIntake(25);
     }
 
-    private void executeBlueTag22() throws InterruptedException {
+    private void executeRedTag22() throws InterruptedException {
         moveBackwardNoIntake(61);
         sleep(DEBUG_DELAY_MS);
 
-        pivotTurnClockwise90();
+        pivotTurnAnticlockwise90();
         sleep(DEBUG_DELAY_MS);
 
         resetPedroPose();
@@ -175,19 +164,13 @@ public class SpikeMarkBlue extends LinearOpMode {
         moveForwardHeadingRelative(4);
         sleep(DEBUG_DELAY_MS);
 
-        moveBackwardNoIntake(30);
+        moveBackwardNoIntake(29);
         sleep(DEBUG_DELAY_MS);
 
         resetPedroPose();
         sleep(DEBUG_DELAY_MS);
 
-        resetPedroPose();
-        sleep(DEBUG_DELAY_MS);
-
-        pivotTurnAnticlockwise90();
-        sleep(DEBUG_DELAY_MS);
-
-        resetPedroPose();
+        pivotTurnClockwise90();
         sleep(DEBUG_DELAY_MS);
 
         resetPedroPose();
@@ -199,13 +182,7 @@ public class SpikeMarkBlue extends LinearOpMode {
         resetPedroPose();
         sleep(DEBUG_DELAY_MS);
 
-        resetPedroPose();
-        sleep(DEBUG_DELAY_MS);
-
-        pivotTurnAnticlockwise45();
-        sleep(DEBUG_DELAY_MS);
-
-        resetPedroPose();
+        pivotTurnClockwise55();
         sleep(DEBUG_DELAY_MS);
 
         resetPedroPose();
@@ -213,11 +190,10 @@ public class SpikeMarkBlue extends LinearOpMode {
 
         startAutoShooterSequence();
 
-
         resetPedroPose();
         sleep(DEBUG_DELAY_MS);
 
-        pivotTurnClockwise45();
+        pivotTurnAnticlockwise45();
 
         resetPedroPose();
         sleep(DEBUG_DELAY_MS);
@@ -225,11 +201,11 @@ public class SpikeMarkBlue extends LinearOpMode {
         moveForwardNoIntake(25);
     }
 
-    private void executeBlueTag23() throws InterruptedException {
+    private void executeRedTag23() throws InterruptedException {
         moveBackwardNoIntake(87);
         sleep(DEBUG_DELAY_MS);
 
-        pivotTurnClockwise90();
+        pivotTurnAnticlockwise90();
         sleep(DEBUG_DELAY_MS);
 
         resetPedroPose();
@@ -244,16 +220,13 @@ public class SpikeMarkBlue extends LinearOpMode {
         moveForwardHeadingRelative(4);
         sleep(DEBUG_DELAY_MS);
 
-        moveBackwardNoIntake(30);
+        moveBackwardNoIntake(29);
         sleep(DEBUG_DELAY_MS);
 
         resetPedroPose();
         sleep(DEBUG_DELAY_MS);
 
-        resetPedroPose();
-        sleep(DEBUG_DELAY_MS);
-
-        pivotTurnAnticlockwise90();
+        pivotTurnClockwise90();
         sleep(DEBUG_DELAY_MS);
 
         resetPedroPose();
@@ -268,13 +241,7 @@ public class SpikeMarkBlue extends LinearOpMode {
         resetPedroPose();
         sleep(DEBUG_DELAY_MS);
 
-        resetPedroPose();
-        sleep(DEBUG_DELAY_MS);
-
-        pivotTurnAnticlockwise45();
-        sleep(DEBUG_DELAY_MS);
-
-        resetPedroPose();
+        pivotTurnClockwise55();
         sleep(DEBUG_DELAY_MS);
 
         resetPedroPose();
@@ -285,7 +252,7 @@ public class SpikeMarkBlue extends LinearOpMode {
         resetPedroPose();
         sleep(DEBUG_DELAY_MS);
 
-        pivotTurnClockwise45();
+        pivotTurnAnticlockwise45();
 
         resetPedroPose();
         sleep(DEBUG_DELAY_MS);
@@ -293,11 +260,11 @@ public class SpikeMarkBlue extends LinearOpMode {
         moveForwardNoIntake(25);
     }
 
-    private void executeBlueDefault() throws InterruptedException {
+    private void executeRedDefault() throws InterruptedException {
         moveBackwardNoIntake(33.5);
         sleep(DEBUG_DELAY_MS);
 
-        pivotTurnClockwise90();
+        pivotTurnAnticlockwise90();
         sleep(DEBUG_DELAY_MS);
 
         resetPedroPose();
@@ -315,16 +282,14 @@ public class SpikeMarkBlue extends LinearOpMode {
         resetPedroPose();
         sleep(DEBUG_DELAY_MS);
 
-        pivotTurnAnticlockwise90();
+        pivotTurnClockwise90();
         sleep(DEBUG_DELAY_MS);
 
         resetPedroPose();
         sleep(DEBUG_DELAY_MS);
-
     }
 
-    // === Helper Methods ===
-
+    // === Helper methods ===
     private int detectAprilTag() {
         int timeout = 0;
         while (opModeIsActive() && timeout < 100) {
@@ -399,17 +364,6 @@ public class SpikeMarkBlue extends LinearOpMode {
         stopAllDriveMotors();
     }
 
-    private void pivotTurnClockwise45() throws InterruptedException {
-        double power = 0.4;
-        long duration = 245;
-        frontLeftMotor.setPower(power);
-        backLeftMotor.setPower(power);
-        frontRightMotor.setPower(-power);
-        backRightMotor.setPower(-power);
-        sleep(duration);
-        stopAllDriveMotors();
-    }
-
     private void pivotTurnAnticlockwise90() throws InterruptedException {
         double power = 0.4;
         long duration = 490;
@@ -432,6 +386,16 @@ public class SpikeMarkBlue extends LinearOpMode {
         stopAllDriveMotors();
     }
 
+    private void pivotTurnClockwise55() throws InterruptedException {
+        double power = 0.4;
+        long duration = 265;
+        frontLeftMotor.setPower(power);
+        backLeftMotor.setPower(power);
+        frontRightMotor.setPower(-power);
+        backRightMotor.setPower(-power);
+        sleep(duration);
+        stopAllDriveMotors();
+    }
 
     private void stopAllDriveMotors() {
         frontLeftMotor.setPower(0);
@@ -454,7 +418,6 @@ public class SpikeMarkBlue extends LinearOpMode {
 
         // --- INITIALIZATION ---
         shooter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
 
 
         // --- AUTONOMOUS SEQUENCE ---
@@ -492,7 +455,7 @@ public class SpikeMarkBlue extends LinearOpMode {
             telemetry.addData("Status", "Step 4: Running shooter...");
             telemetry.update();
 
-            sleep(8000);
+            sleep(5000);
 
             // === Step 5: Stop everything ===
             telemetry.addData("Status", "Step 5: Stopping all hardware.");

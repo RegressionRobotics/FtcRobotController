@@ -73,7 +73,7 @@ import java.util.List;
  */
 
 @TeleOp(name = "Limelight Detection", group = "Autonomous")
-public class LimelightDetect extends OpMode {
+public class LimelightTest extends OpMode {
 
     // Hardware objects
     private Limelight3A limelight;

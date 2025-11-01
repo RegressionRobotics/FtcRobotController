@@ -21,9 +21,9 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import java.util.List;
 
-@Autonomous(name = "BlueAutonWPedro", group = "Opmode")
+@Autonomous(name = "RedAutonWPedro", group = "Opmode")
 @Configurable
-public class TestAutonBlue extends OpMode {
+public class AutonRed extends OpMode {
 
     // === Timers ===
     private final ElapsedTime waitTimer = new ElapsedTime();
@@ -32,7 +32,7 @@ public class TestAutonBlue extends OpMode {
     private int intakePulseCount = 0;   // counts completed ON-pulses
 
     // === Poses ===
-    private final Pose startPose = new Pose(59, 9, Math.toRadians(270));
+    private final Pose startPose = new Pose(85, 9, Math.toRadians(270));
 
     // === AprilTag IDs ===
     private static final int PPG_TAG_ID = 23;
@@ -119,7 +119,7 @@ public class TestAutonBlue extends OpMode {
         arjav.setPosition(1.0);
 
         // Set shooter power: 0.9 only on the second shoot, otherwise 0.75
-        double shooterPower = (shootCount == 1) ? 0.71 : 0.7;
+        double shooterPower = (shootCount == 1) ? 0.75 : 0.751;
         shooter.setPower(shooterPower);
 
         log("Shooting", "Started (Count: " + shootCount + ", Power: " + shooterPower + ")");
@@ -130,7 +130,7 @@ public class TestAutonBlue extends OpMode {
 
         switch (shootStep) {
             case 0: // Spin up shooter — power already set in startShooting()
-                if (shootTimer.milliseconds() > 1500) {
+                if (shootTimer.milliseconds() > 1900) {
                     shootStep = 1;
                     shootTimer.reset();
                     leftTransfer.setPower(1.0);
@@ -170,7 +170,7 @@ public class TestAutonBlue extends OpMode {
                 break;
 
             case 3: // Run shooter (original 3-second hold)
-                if (shootTimer.milliseconds() > 1800) {
+                if (shootTimer.milliseconds() > 1000) {
                     stopShooting();
                 }
                 break;
@@ -181,7 +181,7 @@ public class TestAutonBlue extends OpMode {
         leftTransfer.setPower(0);
         rightTransfer.setPower(0);
         intake.setPower(0);
-        arjav.setPosition(0.6);
+        arjav.setPosition(0.5);
         isShooting = false;
         shootCount++;  // ADD THIS LINE
         log("Shooting", "Finished (Total Shoots: " + shootCount + ")");
@@ -224,7 +224,7 @@ public class TestAutonBlue extends OpMode {
             case 3: /* This case waits for robot to reach pickup 1 and scoops the sample */
                 if (!follower.isBusy()) {
                     intake.setPower(1);
-                    follower.setMaxPower(0.25);
+                    follower.setMaxPower(0.2);
                     switch (foundID) {
                         case PPG_TAG_ID: follower.followPath(scoopPPG, true); break;
                         case PGP_TAG_ID: follower.followPath(scoopPGP, true); break;
@@ -283,12 +283,12 @@ public class TestAutonBlue extends OpMode {
 
     // === Path Building ===
     private void buildPaths() {
-        Pose scoring1 = new Pose(57, 88, Math.toRadians(305));
-        Pose scoring2 = new Pose(48, 49, Math.toRadians(305));
+        Pose scoring1 = new Pose(90, 90, Math.toRadians(220));
+        Pose scoring2 = new Pose(96, 49, Math.toRadians(220));
 
         // PPG
-        Pose pickup1GPP = new Pose(48, 35, Math.toRadians(180));
-        Pose pickup2GPP = new Pose(24, 35, Math.toRadians(180));
+        Pose pickup1GPP = new Pose(100, 39, Math.toRadians(0));
+        Pose pickup2GPP = new Pose(124, 39, Math.toRadians(0));
 
         alignPPG = follower.pathBuilder()
                 .addPath(new BezierLine(startPose, scoring1))
@@ -316,8 +316,8 @@ public class TestAutonBlue extends OpMode {
                 .build();
 
         // PGP
-        Pose pickup1PPG = new Pose(48, 83, Math.toRadians(180));
-        Pose pickup2PPG = new Pose(24, 83, Math.toRadians(180));
+        Pose pickup1PPG = new Pose(100, 83, Math.toRadians(0));
+        Pose pickup2PPG = new Pose(124, 83, Math.toRadians(0));
 
         alignPGP = follower.pathBuilder()
                 .addPath(new BezierLine(startPose, scoring1))
@@ -345,8 +345,8 @@ public class TestAutonBlue extends OpMode {
                 .build();
 
         // GPP
-        Pose pickup1PGP = new Pose(48, 59, Math.toRadians(180));
-        Pose pickup2PGP = new Pose(24, 59, Math.toRadians(180));
+        Pose pickup1PGP = new Pose(100, 59, Math.toRadians(0));
+        Pose pickup2PGP = new Pose(124, 59, Math.toRadians(0));
 
         alignGPP = follower.pathBuilder()
                 .addPath(new BezierLine(startPose, scoring1))

@@ -14,8 +14,8 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-@TeleOp(name = "RedMecanumTeleOp")
-public class Me2 extends OpMode {
+@TeleOp(name = "BlueMecanumTeleOp")
+public class MecanumTeleOpBlue extends OpMode {
 
     // === Hardware ===
     DcMotor frontLeftMotor;
@@ -36,7 +36,7 @@ public class Me2 extends OpMode {
 
     // === Pathing ===
     Follower follower;
-    private final Pose targetScoringPose = new Pose(90, 90, Math.toRadians(220)); // Target: (90, 90, 220°)
+    private final Pose targetScoringPose = new Pose(57, 88, Math.toRadians(305)); // Target: (57, 88, 305°)
     private boolean isFollowingPath = false;
     private PathChain scoringPath;
 
@@ -65,11 +65,11 @@ public class Me2 extends OpMode {
         rightTransfer = hardwareMap.crservo.get("rightTransfer");
         arjav = hardwareMap.servo.get("arjav");
 
-        // Pathing setup – assumes odometry starts from auto end (~96,49,220°)
+        // Pathing setup – assumes odometry starts from auto end (~48,49,305°)
         follower = Constants.createFollower(hardwareMap);
         follower.setMaxPower(1.0);  // Max power (-1 to 1 range) for full-speed pathing to target
 
-        log("Status", "INIT: Ready – Press Y to path to scoring pose (90,90,220°), B to cancel");
+        log("Status", "INIT: Ready – Press Y to path to scoring pose (57,88,305°), B to cancel");
         log("Target Pose", targetScoringPose);
         telemetry.update();
     }
@@ -77,7 +77,7 @@ public class Me2 extends OpMode {
     @Override
     public void start() {
         // Set initial pose and start teleop drive mode
-        follower.setStartingPose(new Pose(96, 49, Math.toRadians(220)));
+        follower.setStartingPose(new Pose(48, 49, Math.toRadians(305)));
         follower.startTeleopDrive();
     }
 
@@ -132,7 +132,7 @@ public class Me2 extends OpMode {
         // Shooter (RB toggle)
         if (currentGamepad1.right_bumper && !previousGamepad1.right_bumper) {
             gamepad1.rumble(100, 100, 100);
-            shooter.setPower(0.75);
+            shooter.setPower(0.7);
         }
         if (!currentGamepad1.right_bumper && previousGamepad1.right_bumper) {
             shooter.setPower(0);
