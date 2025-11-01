@@ -119,7 +119,7 @@ public class TestAutonBlue extends OpMode {
         arjav.setPosition(1.0);
 
         // Set shooter power: 0.9 only on the second shoot, otherwise 0.75
-        double shooterPower = (shootCount == 1) ? 0.75 : 0.73;
+        double shooterPower = (shootCount == 1) ? 0.71 : 0.7;
         shooter.setPower(shooterPower);
 
         log("Shooting", "Started (Count: " + shootCount + ", Power: " + shooterPower + ")");
@@ -283,8 +283,8 @@ public class TestAutonBlue extends OpMode {
 
     // === Path Building ===
     private void buildPaths() {
-        Pose scoring1 = new Pose(54, 90, Math.toRadians(320));
-        Pose scoring2 = new Pose(48, 49, Math.toRadians(320));
+        Pose scoring1 = new Pose(57, 88, Math.toRadians(305));
+        Pose scoring2 = new Pose(48, 49, Math.toRadians(305));
 
         // PPG
         Pose pickup1GPP = new Pose(48, 35, Math.toRadians(180));
