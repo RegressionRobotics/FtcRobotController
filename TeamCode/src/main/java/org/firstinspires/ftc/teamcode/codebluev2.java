@@ -11,7 +11,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-@TeleOp(name = "BlueMecanum - NO HOME, NO SKIPS, SPINNER MOVES")
+@TeleOp(name = "BlueMecanum2.0")
 public class codebluev2 extends OpMode {
 
     DcMotor frontLeft, backLeft, frontRight, backRight;
@@ -26,17 +26,17 @@ public class codebluev2 extends OpMode {
 
     // 0.0 = 500μs | 1.0 = 2500μs
     final double INTAKE_1 = 0.000;   // 500
-    final double INTAKE_2 = 0.333;   // 1166
-    final double INTAKE_3 = 0.667;   // 1833
+    final double INTAKE_2 = 0.34;   // 1166
+    final double INTAKE_3 = 0.7;   // 1833
 
-    final double SHOOT_1 = 0.166;    // 833
-    final double SHOOT_2 = 0.500;    // 1500
-    final double SHOOT_3 = 0.833;    // 1833
+    final double SHOOT_1 = 0.175;    // 833
+    final double SHOOT_2 = 0.520;    // 1500
+    final double SHOOT_3 = 0.853;    // 1833
 
-    final double PUSHER_FIRE = 0.15;
-    final double PUSHER_HOME = 0.85;
-    final double SHOOTER_IDLE = 0.15;
-    final double SHOOTER_FIRE = 0.80;
+    final double PUSHER_FIRE = 0.95;
+    final double PUSHER_HOME = 0.5;
+    final double SHOOTER_IDLE = 0.20;
+    final double SHOOTER_FIRE = 0.70;
 
     ElapsedTime timer = new ElapsedTime();
     int intakeStep = 0;   // 0 = idle, 1–3 = slots
@@ -123,15 +123,17 @@ public class codebluev2 extends OpMode {
 
             // Step 1 → wait 5 sec
             if (shootStep == 1 && timer.seconds() >= 3.0) { rightSerial.setPosition(PUSHER_FIRE); timer.reset(); shootStep = 2; }
-            if (shootStep == 2 && timer.seconds() >= 0.5) { rightSerial.setPosition(PUSHER_HOME);  timer.reset(); shootStep = 3; }
+            if (shootStep == 2 && timer.seconds() >= 0.75) { rightSerial.setPosition(PUSHER_HOME);  timer.reset(); shootStep = 3; }
 
             // Step 3 → wait 1 sec → fire shot 2
-            if (shootStep == 3 && timer.seconds() >= 1.0) { spinner.setPosition(SHOOT_2); rightSerial.setPosition(PUSHER_FIRE); timer.reset(); shootStep = 4; }
-            if (shootStep == 4 && timer.seconds() >= 0.5) { rightSerial.setPosition(PUSHER_HOME);  timer.reset(); shootStep = 5; }
+            if (shootStep == 3 && timer.seconds() >= 0.9) { spinner.setPosition(SHOOT_2); timer.reset(); shootStep = 4; }
+            if (shootStep == 4 && timer.seconds() >= 1.0) { rightSerial.setPosition(PUSHER_FIRE); timer.reset(); shootStep = 5;}
+            if (shootStep == 5 && timer.seconds() >= 0.75) { rightSerial.setPosition(PUSHER_HOME);  timer.reset(); shootStep = 6; }
 
             // Step 5 → wait 1 sec → fire shot 3
-            if (shootStep == 5 && timer.seconds() >= 1.0) { spinner.setPosition(SHOOT_3); rightSerial.setPosition(PUSHER_FIRE); timer.reset(); shootStep = 6; }
-            if (shootStep == 6 && timer.seconds() >= 0.5) { rightSerial.setPosition(PUSHER_HOME);  timer.reset(); shootStep = 7; } // done
+            if (shootStep == 6 && timer.seconds() >= 0.9) { spinner.setPosition(SHOOT_3); timer.reset(); shootStep = 7; }
+            if (shootStep == 7 && timer.seconds() >= 1.0) { rightSerial.setPosition(PUSHER_FIRE); timer.reset(); shootStep = 8;}
+            if (shootStep == 8 && timer.seconds() >= 0.75) { rightSerial.setPosition(PUSHER_HOME);  timer.reset(); shootStep = 9; } // done
         } else {
             shootStep = 0;
             shooter.setPower(SHOOTER_IDLE);
