@@ -11,8 +11,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-@TeleOp(name = "BlueMecanum2.0")
-public class codebluev2 extends OpMode {
+@TeleOp(name = "RedMecanum2.0")
+public class coderedv2 extends OpMode {
 
     DcMotor frontLeft, backLeft, frontRight, backRight;
     DcMotor shooter, intake;
@@ -20,7 +20,7 @@ public class codebluev2 extends OpMode {
     ServoImplEx spinner;
 
     Follower follower;
-    final Pose targetScoringPose = new Pose(48, 96, Math.toRadians(130));
+    final Pose targetScoringPose = new Pose(96, 96, Math.toRadians(130));
     boolean isFollowingPath = false;
     PathChain scoringPath;
 
@@ -33,8 +33,8 @@ public class codebluev2 extends OpMode {
     final double SHOOT_2 = 0.520;    // 1500
     final double SHOOT_3 = 0.853;    // 1833
 
-    final double PUSHER_FIRE = 0.75;
-    final double PUSHER_HOME = 0.53;
+    final double PUSHER_FIRE = 0.85;
+    final double PUSHER_HOME = 0.4;
     final double SHOOTER_IDLE = 0.20;
     final double SHOOTER_FIRE = 0.75;
 
@@ -65,7 +65,7 @@ public class codebluev2 extends OpMode {
     }
 
     @Override public void start() {
-        follower.setStartingPose(new Pose(48, 49, Math.toRadians(135)));
+        follower.setStartingPose(new Pose(96, 49, Math.toRadians(135)));
         follower.startTeleopDrive();
         intake.setPower(0.35);
         shooter.setPower(SHOOTER_IDLE);
