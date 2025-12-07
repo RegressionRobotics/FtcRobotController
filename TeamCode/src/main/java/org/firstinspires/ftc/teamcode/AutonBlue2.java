@@ -15,7 +15,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import java.util.List;
-
+//hi
 @Autonomous(name = "BlueAuton - 3 SHOTS + INTAKE DELAY (FINAL)", group = "Opmode")
 @Configurable
 public class AutonBlue2 extends OpMode {
